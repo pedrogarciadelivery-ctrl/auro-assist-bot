@@ -410,7 +410,36 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]
         ]))
         return
+    # =========================
+    # INSTACART - BOTONES
+    # =========================
+    if data == "instacart:yes":
+        context.user_data["service"] = "instacart"
+        context.user_data["mode"] = "instacart_decide_advance"
+        await q.edit_message_text(
+            INSTACART_WAITLIST_YES_TEXT,
+            reply_markup=advance_menu()
+        )
+        return
 
+    if data == "instacart:no":
+        context.user_data["service"] = "instacart"
+        context.user_data["mode"] = "instacart_decide_advance"
+        await q.edit_message_text(
+            INSTACART_WAITLIST_NO_TEXT,
+            reply_markup=advance_menu()
+        )
+        return
+
+    if data == "instacart:advance":
+        context.user_data.clear()
+        await q.edit_message_text(INSTACART_OWNER_CONTACT_TEXT)
+        return
+
+    if data == "instacart:cancel":
+        context.user_data.clear()
+        await q.edit_message_text(GOODBYE_TEXT)
+        return
     if data.startswith("amz:type:"):
         choice = data.split(":", 2)[2]
         context.user_data["service"] = "amazon_flex"
