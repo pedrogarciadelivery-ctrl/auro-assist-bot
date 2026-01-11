@@ -6,6 +6,14 @@
 import os
 import re
 import time
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
+logging.info("🤖 Bot iniciado correctamente")
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -373,13 +381,26 @@ def advance_menu():
 # =========================
 # HANDLERS
 # =========================
+    
+)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
+        logging.info(
+        "START | user_id=%s | @%s",
+        update.effective_user.id,
+        update.effective_user.username
+    )
     await update.message.reply_text(WELCOME)
     await update.message.reply_text(CHOOSE_SERVICE, reply_markup=services_menu())
 
 async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
+    logging.info(
+        "CALLBACK | user_id=%s | @%s | data=%s",
+        q.from_user.id,
+        q.from_user.username,
+        q.data
+    )
     await q.answer()
     data = q.data or ""
 
