@@ -100,7 +100,39 @@ COMING_SOON_TEXT = (
     "✅ Servicio seleccionado.\n\n"
     "Este servicio se habilitará próximamente. Por ahora, por favor seleccione Amazon Flex."
 )
+INSTACART_INTRO_TEXT = (
+    "✅ Veo que escogiste la opción de Instacart.\n\n"
+    "Y ahí vamos con las preguntas importantes para poder saber qué hacer con este cliente.\n\n"
+    "📌 Lo primero:\n"
+    "¿Alguna vez aplicó y tiene una cuenta en lista de espera?\n\n"
+)
 
+INSTACART_WAITLIST_YES_TEXT = (
+    "Entendido ✅\n\n"
+    "Si ya aplicó y está en lista de espera, vamos a necesitar:\n"
+    "• Otro correo electrónico\n"
+    "• Otro número de teléfono (puede ser online)\n\n"
+    "💰 Costo: $150\n\n"
+    "¿Desea avanzar con la aplicación?"
+)
+
+INSTACART_WAITLIST_NO_TEXT = (
+    "Perfecto ✅\n\n"
+    "Si NO ha aplicado nunca, vamos a necesitar:\n"
+    "• Número de teléfono\n"
+    "• Correo electrónico NUNCA usado en Instacart\n\n"
+    "💰 Costo: $150\n\n"
+    "¿Desea avanzar con la aplicación?"
+)
+
+INSTACART_OWNER_CONTACT_TEXT = (
+    "Perfecto ✅\n\n"
+    "Para avanzar con el proceso, por favor comuníquese conmigo directamente por WhatsApp:\n\n"
+    f"📞 WhatsApp: {WHATSAPP_NUMBER}\n\n"
+    "Escriba por favor:\n"
+    "\"Hola, vengo del bot, elegí Instacart y quiero avanzar\".\n\n"
+    "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp."
+)
 # =========================
 # DISPONIBILIDAD REAL (EDITA AQUÍ SI CAMBIA)
 # base_price = precio base de ciudad (antes de sumas)
@@ -323,7 +355,21 @@ def amazon_type_menu():
         [InlineKeyboardButton("♻️ Reactivación", callback_data="amz:type:reactivacion")],
         [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")],
     ])
+def yes_no_menu():
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ SI", callback_data="instacart:yes"),
+            InlineKeyboardButton("❌ NO", callback_data="instacart:no"),
+        ]
+    ])
 
+def advance_menu():
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("➡️ AVANZAR", callback_data="instacart:advance"),
+            InlineKeyboardButton("❌ NO", callback_data="instacart:cancel"),
+        ]
+    ])
 # =========================
 # HANDLERS
 # =========================
@@ -349,9 +395,17 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if service_key == "amazon_flex":
             context.user_data["mode"] = "amazon_choose_type"
+                    
             await q.edit_message_text(AMAZON_CHOOSE_TYPE, reply_markup=amazon_type_menu())
             return
-
+if service_key == "instacart":
+            context.user_data["service"] = "instacart"
+            context.user_data["mode"] = "instacart_waitlist_question"
+            await q.edit_message_text(
+                INSTACART_INTRO_TEXT,
+                reply_markup=yes_no_menu()
+            )
+            return
         await q.edit_message_text(COMING_SOON_TEXT, reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]
         ]))
