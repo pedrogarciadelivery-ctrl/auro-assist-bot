@@ -382,7 +382,7 @@ def advance_menu():
 # HANDLERS
 # =========================
     
-)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
         logging.info(
