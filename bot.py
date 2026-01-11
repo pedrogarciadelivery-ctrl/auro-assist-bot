@@ -398,7 +398,7 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     
             await q.edit_message_text(AMAZON_CHOOSE_TYPE, reply_markup=amazon_type_menu())
             return
-if service_key == "instacart":
+        if service_key == "instacart":
             context.user_data["service"] = "instacart"
             context.user_data["mode"] = "instacart_waitlist_question"
             await q.edit_message_text(
