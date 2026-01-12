@@ -1,13 +1,18 @@
 # bot.py
 # Telegram Bot (Python) - Auro Ashly Flex Master
-# Flujo principal: Servicios -> Amazon Flex -> (Cuenta nueva / Reactivación) + Instacart
+# Flujo principal: Servicios -> Amazon Flex -> (Cuenta nueva / Reactivación)
 # Sin IA. Sin inventar disponibilidad. Con cierre formal y sugerencia de Estados de WhatsApp.
-# EXTRA: Notificación al admin (tú) por cada /start, botón y mensaje.
+#
+# ✅ ADMIN MODE:
+# - Envía a tu Telegram (ADMIN_CHAT_ID) todo lo que escriben los clientes + botones
+# - Te dice quién lo escribió (nombre, @username, user_id, chat_id)
+# - También notifica cuando dan /start
 
 import os
 import re
 import time
 import logging
+from datetime import datetime, timezone
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -26,17 +31,20 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
+logging.info("🤖 Bot iniciado (cargando código)")
 
 # =========================
 # CONFIG
 # =========================
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
 
+# ✅ Tu Telegram ID para recibir todo (poner en Render -> Environment)
+# KEY: ADMIN_CHAT_ID
+# VALUE: 7639001737
+ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
+
 # Tu WhatsApp (formato USA)
 WHATSAPP_NUMBER = "+1 512 679 0599"
-
-# Tu chat_id de admin (ponlo en Render -> Environment como ADMIN_CHAT_ID)
-ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")  # ejemplo: "123456789"
 
 # =========================
 # TEXTOS
@@ -87,18 +95,18 @@ AMAZON_REQUIREMENTS_TEXT = (
     "Si está de acuerdo y cumple con todo, por favor escriba: CUMPLO"
 )
 
-WHATSAPP_STATUS_TEXT = (
-    "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp, "
-    "ya que ahí publicamos las ciudades disponibles en tiempo real.\n\n"
-    f"📞 WhatsApp: {WHATSAPP_NUMBER}"
-)
-
 OWNER_CONTACT_TEXT = (
     "Perfecto ✅\n\n"
     "Si cumple con todos los requisitos y desea continuar con la aplicación, "
     "por favor comuníquese conmigo directamente por WhatsApp:\n\n"
     f"📞 WhatsApp: {WHATSAPP_NUMBER}\n\n"
     "Escriba por favor: \"Hola, vengo del bot y cumplo con los requisitos\"."
+)
+
+WHATSAPP_STATUS_TEXT = (
+    "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp, "
+    "ya que ahí publicamos las ciudades disponibles en tiempo real.\n\n"
+    f"📞 WhatsApp: {WHATSAPP_NUMBER}"
 )
 
 GOODBYE_TEXT = (
@@ -151,7 +159,6 @@ INSTACART_OWNER_CONTACT_TEXT = (
 
 # =========================
 # DISPONIBILIDAD REAL (EDITA AQUÍ SI CAMBIA)
-# base_price = precio base de ciudad (antes de sumas)
 # =========================
 AVAILABLE_CITIES = {
     # Pennsylvania (PA)
@@ -169,7 +176,6 @@ AVAILABLE_CITIES = {
         "price": 190,
         "note": "",
     },
-
     # Minnesota (MN)
     "mankato": {
         "display": "Mankato, MN",
@@ -178,7 +184,6 @@ AVAILABLE_CITIES = {
         "price": 150,
         "note": "80 miles to Minneapolis",
     },
-
     # West Virginia (WV)
     "parkersburg": {
         "display": "Parkersburg, WV",
@@ -194,7 +199,6 @@ AVAILABLE_CITIES = {
         "price": 150,
         "note": "3 hours to Charlotte",
     },
-
     # Georgia (GA)
     "brunswick": {
         "display": "Brunswick, GA",
@@ -203,7 +207,6 @@ AVAILABLE_CITIES = {
         "price": 300,
         "note": "1 hour to Jacksonville",
     },
-
     # New York (NY)
     "buffalo": {
         "display": "Buffalo, NY",
@@ -244,6 +247,7 @@ EXIT_KEYWORDS = {
     "no quiero", "ya no", "no gracias",
     "gracias",
 }
+
 def wants_to_exit(text_norm: str) -> bool:
     return any(k in text_norm for k in EXIT_KEYWORDS)
 
@@ -316,7 +320,6 @@ def suggest_alternatives(user_text: str, limit: int = 3):
     return out[:limit]
 
 def calculate_final_price(base_price: int, account_type: str) -> int:
-    # account_type: "new" o "reactivation"
     if account_type == "reactivation":
         return base_price + 500
     return base_price + 150
@@ -351,25 +354,49 @@ def availability_message(city_raw: str, account_type: str) -> str:
         f"{WHATSAPP_STATUS_TEXT}"
     )
 
-def safe(s: str, limit: int = 3500) -> str:
-    s = (s or "").strip()
-    return s[:limit]
+# =========================
+# ADMIN / MONITOREO
+# =========================
+_seen_users = {}  # user_id -> last_seen_iso
 
-def fmt_user(user) -> str:
-    if not user:
-        return "Desconocido"
-    uname = user.username or "sin_username"
-    full = getattr(user, "full_name", None) or "Sin nombre"
-    return f"{full} (@{uname}) | user_id={user.id}"
+def _user_label(u) -> str:
+    if not u:
+        return "N/A"
+    name = (u.full_name or "").strip() or "Sin nombre"
+    uname = f"@{u.username}" if getattr(u, "username", None) else "(sin @)"
+    return f"{name} {uname} | user_id={u.id}"
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 async def notify_admin(context: ContextTypes.DEFAULT_TYPE, text: str):
-    """Envía al admin (tú) un resumen de actividad del bot."""
+    """Envía a tu chat (ADMIN_CHAT_ID) un mensaje con logs del bot."""
     if not ADMIN_CHAT_ID:
         return
     try:
-        await context.bot.send_message(chat_id=int(ADMIN_CHAT_ID), text=safe(text))
+        await context.bot.send_message(chat_id=int(ADMIN_CHAT_ID), text=text)
     except Exception as e:
-        logging.warning(f"ADMIN notify failed: {e}")
+        logging.warning("No pude notificar al admin: %s", e)
+
+async def track_user_and_notify_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    u = update.effective_user
+    if u:
+        _seen_users[str(u.id)] = _now_iso()
+
+async def cmd_admin_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✅ Admin test OK")
+    await notify_admin(context, "✅ Admin test: el bot puede enviarte mensajes.")
+
+async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Lista rápida de últimos usuarios vistos (memoria temporal; se reinicia si Render reinicia)."""
+    if not _seen_users:
+        await update.message.reply_text("Aún no hay usuarios registrados en memoria.")
+        return
+    items = sorted(_seen_users.items(), key=lambda x: x[1], reverse=True)[:20]
+    lines = [f"👥 Últimos usuarios (máx 20):"]
+    for user_id, ts in items:
+        lines.append(f"• user_id={user_id} | last_seen={ts}")
+    await update.message.reply_text("\n".join(lines))
 
 # =========================
 # MENÚS
@@ -414,16 +441,18 @@ def advance_menu():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
 
-    logging.info(
-        "START | user_id=%s | @%s",
-        update.effective_user.id,
-        update.effective_user.username
-    )
+    await track_user_and_notify_start(update, context)
 
+    # Log en Render
+    logging.info("START | %s | chat_id=%s",
+                 _user_label(update.effective_user),
+                 update.effective_chat.id if update.effective_chat else "N/A")
+
+    # Notificación a tu Telegram
     await notify_admin(
         context,
         "🟢 /start\n"
-        f"👤 {fmt_user(update.effective_user)}\n"
+        f"👤 {_user_label(update.effective_user)}\n"
         f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}"
     )
 
@@ -432,23 +461,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    await q.answer()
-    data = q.data or ""
+    await track_user_and_notify_start(update, context)
 
-    logging.info(
-        "CALLBACK | user_id=%s | @%s | data=%s",
-        q.from_user.id,
-        q.from_user.username,
-        data
-    )
+    data = (q.data or "")
+    logging.info("CALLBACK | %s | data=%s", _user_label(q.from_user), data)
 
+    # ✅ Notificar botones al admin
     await notify_admin(
         context,
-        "🟣 BOTÓN\n"
-        f"👤 {fmt_user(q.from_user)}\n"
+        "🔘 BOTÓN (callback)\n"
+        f"👤 {_user_label(q.from_user)}\n"
         f"💬 chat_id={q.message.chat_id if q.message else 'N/A'}\n"
-        f"🔘 data={data}"
+        f"📦 data={data}"
     )
+
+    await q.answer()
 
     if data == "nav:services":
         context.user_data.clear()
@@ -473,9 +500,7 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await q.edit_message_text(
             COMING_SOON_TEXT,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]
-            ])
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]])
         )
         return
 
@@ -505,7 +530,7 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # =========================
-    # AMAZON FLEX - BOTONES
+    # AMAZON - TIPO
     # =========================
     if data.startswith("amz:type:"):
         choice = data.split(":", 2)[2]
@@ -527,22 +552,19 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_duplicate(update.message.chat_id, update.message.message_id):
         return
 
+    await track_user_and_notify_start(update, context)
+
     text_raw = update.message.text or ""
     text_norm = normalize(text_raw)
 
-    logging.info(
-        "TEXT | user_id=%s | @%s | %s",
-        update.effective_user.id,
-        update.effective_user.username,
-        text_raw
-    )
-
+    # ✅ Notificar texto al admin
+    u = update.effective_user
     await notify_admin(
         context,
-        "🟡 MENSAJE\n"
-        f"👤 {fmt_user(update.effective_user)}\n"
+        "📩 MENSAJE\n"
+        f"👤 {_user_label(u)}\n"
         f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}\n"
-        f"✍️ {text_raw}"
+        f"✍️ texto:\n{text_raw}"
     )
 
     # Salida formal en cualquier momento
@@ -566,7 +588,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = availability_message(city_raw, account_type="new")
         await update.message.reply_text(reply)
 
-        # Si hay disponibilidad, esperamos "CONTINUAR"
         if find_city_key(city_raw):
             context.user_data["mode"] = "amazon_new_wait_continue"
             context.user_data["last_city"] = city_raw
@@ -633,18 +654,35 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=services_menu()
     )
 
+async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logging.exception("ERROR del bot: %s", context.error)
+    # Si hay admin, intentamos avisar (sin romper nada)
+    try:
+        await notify_admin(context, f"🚨 ERROR en el bot:\n{context.error}")
+    except Exception:
+        pass
+
 def main():
     if not BOT_TOKEN:
         raise RuntimeError("Falta TELEGRAM_BOT_TOKEN o BOT_TOKEN en variables de entorno")
 
-    logging.info("🤖 Bot iniciado correctamente (main)")
+    # Aviso si faltó admin id
+    if not ADMIN_CHAT_ID:
+        logging.warning("⚠️ Falta ADMIN_CHAT_ID (no se enviarán mensajes al admin).")
 
     app = Application.builder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("admin_test", cmd_admin_test))
+    app.add_handler(CommandHandler("who", cmd_who))
+
     app.add_handler(CallbackQueryHandler(on_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
-    # Polling (si usas Render, evita tener 2 instancias corriendo a la vez)
+    app.add_error_handler(on_error)
+
+    logging.info("✅ Bot listo. Iniciando polling...")
+    # Polling (Render: asegúrate que SOLO haya 1 instancia corriendo)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
