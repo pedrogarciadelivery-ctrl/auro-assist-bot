@@ -1,19 +1,14 @@
 # bot.py
 # Telegram Bot (Python) - Auro Ashly Flex Master
-# Flujo principal: Servicios -> Amazon Flex -> (Cuenta nueva / Reactivación)
+# Flujo principal: Servicios -> Amazon Flex -> (Cuenta nueva / Reactivación) + Instacart
 # Sin IA. Sin inventar disponibilidad. Con cierre formal y sugerencia de Estados de WhatsApp.
+# EXTRA: Notificación al admin (tú) por cada /start, botón y mensaje.
 
 import os
 import re
 import time
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s"
-)
-
-logging.info("🤖 Bot iniciado correctamente")
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -25,12 +20,23 @@ from telegram.ext import (
 )
 
 # =========================
+# LOGGING
+# =========================
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
+# =========================
 # CONFIG
 # =========================
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
 
 # Tu WhatsApp (formato USA)
 WHATSAPP_NUMBER = "+1 512 679 0599"
+
+# Tu chat_id de admin (ponlo en Render -> Environment como ADMIN_CHAT_ID)
+ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")  # ejemplo: "123456789"
 
 # =========================
 # TEXTOS
@@ -81,18 +87,18 @@ AMAZON_REQUIREMENTS_TEXT = (
     "Si está de acuerdo y cumple con todo, por favor escriba: CUMPLO"
 )
 
+WHATSAPP_STATUS_TEXT = (
+    "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp, "
+    "ya que ahí publicamos las ciudades disponibles en tiempo real.\n\n"
+    f"📞 WhatsApp: {WHATSAPP_NUMBER}"
+)
+
 OWNER_CONTACT_TEXT = (
     "Perfecto ✅\n\n"
     "Si cumple con todos los requisitos y desea continuar con la aplicación, "
     "por favor comuníquese conmigo directamente por WhatsApp:\n\n"
     f"📞 WhatsApp: {WHATSAPP_NUMBER}\n\n"
     "Escriba por favor: \"Hola, vengo del bot y cumplo con los requisitos\"."
-)
-
-WHATSAPP_STATUS_TEXT = (
-    "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp, "
-    "ya que ahí publicamos las ciudades disponibles en tiempo real.\n\n"
-    f"📞 WhatsApp: {WHATSAPP_NUMBER}"
 )
 
 GOODBYE_TEXT = (
@@ -108,6 +114,7 @@ COMING_SOON_TEXT = (
     "✅ Servicio seleccionado.\n\n"
     "Este servicio se habilitará próximamente. Por ahora, por favor seleccione Amazon Flex."
 )
+
 INSTACART_INTRO_TEXT = (
     "✅ Veo que escogiste la opción de Instacart.\n\n"
     "Y ahí vamos con las preguntas importantes para poder saber qué hacer con este cliente.\n\n"
@@ -141,6 +148,7 @@ INSTACART_OWNER_CONTACT_TEXT = (
     "\"Hola, vengo del bot, elegí Instacart y quiero avanzar\".\n\n"
     "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp."
 )
+
 # =========================
 # DISPONIBILIDAD REAL (EDITA AQUÍ SI CAMBIA)
 # base_price = precio base de ciudad (antes de sumas)
@@ -210,6 +218,7 @@ AVAILABLE_CITIES = {
 # HELPERS
 # =========================
 _recent = {}
+
 def is_duplicate(chat_id: int, message_id: int, ttl: int = 30) -> bool:
     now = time.time()
     for k, ts in list(_recent.items()):
@@ -294,7 +303,6 @@ def suggest_alternatives(user_text: str, limit: int = 3):
             if same_region:
                 return same_region[:limit]
 
-    # fallback ordenado por regiones
     ordered = []
     for pref in ["northeast", "south", "midwest", "west"]:
         ordered.extend([meta["display"] for _, meta in items if meta.get("region") == pref])
@@ -343,6 +351,26 @@ def availability_message(city_raw: str, account_type: str) -> str:
         f"{WHATSAPP_STATUS_TEXT}"
     )
 
+def safe(s: str, limit: int = 3500) -> str:
+    s = (s or "").strip()
+    return s[:limit]
+
+def fmt_user(user) -> str:
+    if not user:
+        return "Desconocido"
+    uname = user.username or "sin_username"
+    full = getattr(user, "full_name", None) or "Sin nombre"
+    return f"{full} (@{uname}) | user_id={user.id}"
+
+async def notify_admin(context: ContextTypes.DEFAULT_TYPE, text: str):
+    """Envía al admin (tú) un resumen de actividad del bot."""
+    if not ADMIN_CHAT_ID:
+        return
+    try:
+        await context.bot.send_message(chat_id=int(ADMIN_CHAT_ID), text=safe(text))
+    except Exception as e:
+        logging.warning(f"ADMIN notify failed: {e}")
+
 # =========================
 # MENÚS
 # =========================
@@ -363,6 +391,7 @@ def amazon_type_menu():
         [InlineKeyboardButton("♻️ Reactivación", callback_data="amz:type:reactivacion")],
         [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")],
     ])
+
 def yes_no_menu():
     return InlineKeyboardMarkup([
         [
@@ -378,31 +407,48 @@ def advance_menu():
             InlineKeyboardButton("❌ NO", callback_data="instacart:cancel"),
         ]
     ])
+
 # =========================
 # HANDLERS
 # =========================
-    
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-        logging.info(
+
+    logging.info(
         "START | user_id=%s | @%s",
         update.effective_user.id,
         update.effective_user.username
     )
+
+    await notify_admin(
+        context,
+        "🟢 /start\n"
+        f"👤 {fmt_user(update.effective_user)}\n"
+        f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}"
+    )
+
     await update.message.reply_text(WELCOME)
     await update.message.reply_text(CHOOSE_SERVICE, reply_markup=services_menu())
 
 async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
+    await q.answer()
+    data = q.data or ""
+
     logging.info(
         "CALLBACK | user_id=%s | @%s | data=%s",
         q.from_user.id,
         q.from_user.username,
-        q.data
+        data
     )
-    await q.answer()
-    data = q.data or ""
+
+    await notify_admin(
+        context,
+        "🟣 BOTÓN\n"
+        f"👤 {fmt_user(q.from_user)}\n"
+        f"💬 chat_id={q.message.chat_id if q.message else 'N/A'}\n"
+        f"🔘 data={data}"
+    )
 
     if data == "nav:services":
         context.user_data.clear()
@@ -416,40 +462,36 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if service_key == "amazon_flex":
             context.user_data["mode"] = "amazon_choose_type"
-                    
             await q.edit_message_text(AMAZON_CHOOSE_TYPE, reply_markup=amazon_type_menu())
             return
+
         if service_key == "instacart":
             context.user_data["service"] = "instacart"
             context.user_data["mode"] = "instacart_waitlist_question"
-            await q.edit_message_text(
-                INSTACART_INTRO_TEXT,
-                reply_markup=yes_no_menu()
-            )
+            await q.edit_message_text(INSTACART_INTRO_TEXT, reply_markup=yes_no_menu())
             return
-        await q.edit_message_text(COMING_SOON_TEXT, reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]
-        ]))
+
+        await q.edit_message_text(
+            COMING_SOON_TEXT,
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]
+            ])
+        )
         return
+
     # =========================
     # INSTACART - BOTONES
     # =========================
     if data == "instacart:yes":
         context.user_data["service"] = "instacart"
         context.user_data["mode"] = "instacart_decide_advance"
-        await q.edit_message_text(
-            INSTACART_WAITLIST_YES_TEXT,
-            reply_markup=advance_menu()
-        )
+        await q.edit_message_text(INSTACART_WAITLIST_YES_TEXT, reply_markup=advance_menu())
         return
 
     if data == "instacart:no":
         context.user_data["service"] = "instacart"
         context.user_data["mode"] = "instacart_decide_advance"
-        await q.edit_message_text(
-            INSTACART_WAITLIST_NO_TEXT,
-            reply_markup=advance_menu()
-        )
+        await q.edit_message_text(INSTACART_WAITLIST_NO_TEXT, reply_markup=advance_menu())
         return
 
     if data == "instacart:advance":
@@ -461,6 +503,10 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
         await q.edit_message_text(GOODBYE_TEXT)
         return
+
+    # =========================
+    # AMAZON FLEX - BOTONES
+    # =========================
     if data.startswith("amz:type:"):
         choice = data.split(":", 2)[2]
         context.user_data["service"] = "amazon_flex"
@@ -483,6 +529,21 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text_raw = update.message.text or ""
     text_norm = normalize(text_raw)
+
+    logging.info(
+        "TEXT | user_id=%s | @%s | %s",
+        update.effective_user.id,
+        update.effective_user.username,
+        text_raw
+    )
+
+    await notify_admin(
+        context,
+        "🟡 MENSAJE\n"
+        f"👤 {fmt_user(update.effective_user)}\n"
+        f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}\n"
+        f"✍️ {text_raw}"
+    )
 
     # Salida formal en cualquier momento
     if wants_to_exit(text_norm):
@@ -509,7 +570,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if find_city_key(city_raw):
             context.user_data["mode"] = "amazon_new_wait_continue"
             context.user_data["last_city"] = city_raw
-        # Si no hay, se queda en el mismo modo para que escriba otra ciudad
         return
 
     if service == "amazon_flex" and mode == "amazon_new_wait_continue":
@@ -576,6 +636,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     if not BOT_TOKEN:
         raise RuntimeError("Falta TELEGRAM_BOT_TOKEN o BOT_TOKEN en variables de entorno")
+
+    logging.info("🤖 Bot iniciado correctamente (main)")
 
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
