@@ -159,6 +159,8 @@ INSTACART_OWNER_CONTACT_TEXT = (
 
 # =========================
 # DISPONIBILIDAD REAL (EDITA AQUÍ SI CAMBIA)
+# Precios base YA incluyen +150 (según tu lista final)
+# Reactivación suma +500 adicional (ver calculate_final_price)
 # =========================
 AVAILABLE_CITIES = {
     # Pennsylvania (PA)
@@ -166,54 +168,180 @@ AVAILABLE_CITIES = {
         "display": "Bellefonte, PA",
         "state": "PA",
         "region": "northeast",
-        "price": 150,
-        "note": "Close to NY and Philadelphia",
+        "price": 270,
+        "note": "Cerca de NY y Philadelphia",
     },
     "pittsburgh": {
         "display": "Pittsburgh, PA",
         "state": "PA",
         "region": "northeast",
-        "price": 190,
+        "price": 350,
         "note": "",
     },
+
     # Minnesota (MN)
     "mankato": {
         "display": "Mankato, MN",
         "state": "MN",
         "region": "midwest",
-        "price": 150,
-        "note": "80 miles to Minneapolis",
+        "price": 250,
+        "note": "A 80 millas de Minneapolis",
     },
+    "minneapolis": {
+        "display": "Minneapolis, MN",
+        "state": "MN",
+        "region": "midwest",
+        "price": 400,
+        "note": "",
+    },
+
     # West Virginia (WV)
-    "parkersburg": {
-        "display": "Parkersburg, WV",
+    "davisville": {
+        "display": "Davisville, WV",
         "state": "WV",
         "region": "south",
-        "price": 150,
-        "note": "3 Hours to Cincinnati",
+        "price": 300,
+        "note": "A 3 horas de Cincinnati",
     },
     "beaver": {
         "display": "Beaver, WV",
         "state": "WV",
         "region": "south",
-        "price": 150,
-        "note": "3 hours to Charlotte",
+        "price": 280,
+        "note": "A 3 horas de Charlotte",
     },
+
     # Georgia (GA)
     "brunswick": {
         "display": "Brunswick, GA",
         "state": "GA",
         "region": "south",
         "price": 300,
-        "note": "1 hour to Jacksonville",
+        "note": "A 1 hora de Jacksonville",
     },
+
     # New York (NY)
     "buffalo": {
         "display": "Buffalo, NY",
         "state": "NY",
         "region": "northeast",
-        "price": 170,
-        "note": "Large city",
+        "price": 500,
+        "note": "",
+    },
+
+    # Missouri (MO)
+    "maryville": {
+        "display": "Maryville, MO",
+        "state": "MO",
+        "region": "midwest",
+        "price": 330,
+        "note": "A 120 millas de Kansas City",
+    },
+
+    # Tennessee (TN)
+    "knoxville": {
+        "display": "Knoxville, TN",
+        "state": "TN",
+        "region": "south",
+        "price": 375,
+        "note": "",
+    },
+
+    # Colorado (CO)
+    "gypsum": {
+        "display": "Gypsum, CO",
+        "state": "CO",
+        "region": "west",
+        "price": 250,
+        "note": "",
+    },
+
+    # Arkansas (AR)
+    "jonesboro": {
+        "display": "Jonesboro, AR",
+        "state": "AR",
+        "region": "south",
+        "price": 250,
+        "note": "",
+    },
+
+    # Iowa (IA)
+    "des moines": {
+        "display": "Des Moines, IA",
+        "state": "IA",
+        "region": "midwest",
+        "price": 450,
+        "note": "",
+    },
+
+    # Kansas (KS)
+    "fort scott": {
+        "display": "Fort Scott, KS",
+        "state": "KS",
+        "region": "midwest",
+        "price": 500,
+        "note": "",
+    },
+
+    # Michigan (MI)
+    "grand rapids": {
+        "display": "Grand Rapids, MI",
+        "state": "MI",
+        "region": "midwest",
+        "price": 500,
+        "note": "",
+    },
+    "kalamazoo": {
+        "display": "Kalamazoo, MI",
+        "state": "MI",
+        "region": "midwest",
+        "price": 500,
+        "note": "",
+    },
+
+    # North Carolina (NC)
+    "greensboro": {
+        "display": "Greensboro, NC",
+        "state": "NC",
+        "region": "south",
+        "price": 650,
+        "note": "",
+    },
+
+    # Alabama (AL)
+    "dothan": {
+        "display": "Dothan, AL",
+        "state": "AL",
+        "region": "south",
+        "price": 450,
+        "note": "",
+    },
+
+    # Washington (WA)
+    "kitsap": {
+        "display": "Kitsap, WA",
+        "state": "WA",
+        "region": "west",
+        "price": 500,
+        "note": "A 40 millas de Seattle",
+    },
+
+    # Oregon (OR)
+    "portland": {
+        "display": "Portland, OR",
+        "state": "OR",
+        "region": "west",
+        "price": 700,
+        "note": "",
+    },
+
+    # Maryland (MD)
+    "baltimore": {
+        "display": "Baltimore, MD",
+        "state": "MD",
+        "region": "south",
+        "price": 600,
+        "note": "",
     },
 }
 
@@ -275,6 +403,20 @@ def extract_state_code(raw: str):
         "GEORGIA":"GA",
         "NEW YORK":"NY",
         "PENSILVANIA":"PA",
+
+        # extras (para sugerencias)
+        "MARYLAND":"MD",
+        "OREGON":"OR",
+        "WASHINGTON":"WA",
+        "TENNESSEE":"TN",
+        "COLORADO":"CO",
+        "IOWA":"IA",
+        "KANSAS":"KS",
+        "MICHIGAN":"MI",
+        "NORTH CAROLINA":"NC",
+        "ALABAMA":"AL",
+        "ARKANSAS":"AR",
+        "MISSOURI":"MO",
     }
     up = re.sub(r"[^A-Z\s]", " ", text)
     up = re.sub(r"\s+", " ", up).strip()
@@ -287,9 +429,14 @@ def find_city_key(user_text: str):
     t = normalize(user_text)
     if t in AVAILABLE_CITIES:
         return t
+
+    # match seguro incluso con ciudades multi-palabra (ej: "des moines", "fort scott")
+    t_pad = f" {t} "
     for key in AVAILABLE_CITIES.keys():
-        if re.search(rf"\b{re.escape(key)}\b", t):
+        key_pad = f" {key} "
+        if key_pad in t_pad:
             return key
+
     return None
 
 def suggest_alternatives(user_text: str, limit: int = 3):
@@ -320,9 +467,11 @@ def suggest_alternatives(user_text: str, limit: int = 3):
     return out[:limit]
 
 def calculate_final_price(base_price: int, account_type: str) -> int:
+    # ⚠️ base_price YA incluye +150 (lista final)
+    # Reactivación sigue sumando +500 adicional
     if account_type == "reactivation":
         return base_price + 500
-    return base_price + 150
+    return base_price
 
 def availability_message(city_raw: str, account_type: str) -> str:
     key = find_city_key(city_raw)
