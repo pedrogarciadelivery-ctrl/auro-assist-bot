@@ -63,9 +63,11 @@ AMAZON_CHOOSE_TYPE = (
     "Por favor, seleccione una opción:"
 )
 
+# ✅ NUEVO: Encabezado + NO pedir escribir ciudad
 AMAZON_NEW_ACCOUNT_TEXT = (
-    "Veo que necesita una cuenta nueva.\n\n"
-    "Por favor, indíquenos en qué ciudad desea crear la cuenta."
+    "Veo que ha seleccionado Cuenta Nueva ✅\n\n"
+    "Aquí tiene todas las ciudades que tenemos disponibles.\n\n"
+    "👉 Si alguna le interesa, puede tocarla y así nos lo hará saber."
 )
 
 AMAZON_REACT_REQUIREMENTS_TEXT = (
@@ -164,185 +166,60 @@ INSTACART_OWNER_CONTACT_TEXT = (
 # =========================
 AVAILABLE_CITIES = {
     # Pennsylvania (PA)
-    "bellefonte": {
-        "display": "Bellefonte, PA",
-        "state": "PA",
-        "region": "northeast",
-        "price": 270,
-        "note": "Cerca de NY y Philadelphia",
-    },
-    "pittsburgh": {
-        "display": "Pittsburgh, PA",
-        "state": "PA",
-        "region": "northeast",
-        "price": 350,
-        "note": "",
-    },
+    "bellefonte": {"display": "Bellefonte, PA", "state": "PA", "region": "northeast", "price": 270, "note": "Cerca de NY y Philadelphia"},
+    "pittsburgh": {"display": "Pittsburgh, PA", "state": "PA", "region": "northeast", "price": 350, "note": ""},
 
     # Minnesota (MN)
-    "mankato": {
-        "display": "Mankato, MN",
-        "state": "MN",
-        "region": "midwest",
-        "price": 250,
-        "note": "A 80 millas de Minneapolis",
-    },
-    "minneapolis": {
-        "display": "Minneapolis, MN",
-        "state": "MN",
-        "region": "midwest",
-        "price": 400,
-        "note": "",
-    },
+    "mankato": {"display": "Mankato, MN", "state": "MN", "region": "midwest", "price": 250, "note": "A 80 millas de Minneapolis"},
+    "minneapolis": {"display": "Minneapolis, MN", "state": "MN", "region": "midwest", "price": 400, "note": ""},
 
     # West Virginia (WV)
-    "davisville": {
-        "display": "Davisville, WV",
-        "state": "WV",
-        "region": "south",
-        "price": 300,
-        "note": "A 3 horas de Cincinnati",
-    },
-    "beaver": {
-        "display": "Beaver, WV",
-        "state": "WV",
-        "region": "south",
-        "price": 280,
-        "note": "A 3 horas de Charlotte",
-    },
+    "davisville": {"display": "Davisville, WV", "state": "WV", "region": "south", "price": 300, "note": "A 3 horas de Cincinnati"},
+    "beaver": {"display": "Beaver, WV", "state": "WV", "region": "south", "price": 280, "note": "A 3 horas de Charlotte"},
 
     # Georgia (GA)
-    "brunswick": {
-        "display": "Brunswick, GA",
-        "state": "GA",
-        "region": "south",
-        "price": 300,
-        "note": "A 1 hora de Jacksonville",
-    },
+    "brunswick": {"display": "Brunswick, GA", "state": "GA", "region": "south", "price": 300, "note": "A 1 hora de Jacksonville"},
 
     # New York (NY)
-    "buffalo": {
-        "display": "Buffalo, NY",
-        "state": "NY",
-        "region": "northeast",
-        "price": 500,
-        "note": "",
-    },
+    "buffalo": {"display": "Buffalo, NY", "state": "NY", "region": "northeast", "price": 500, "note": ""},
 
     # Missouri (MO)
-    "maryville": {
-        "display": "Maryville, MO",
-        "state": "MO",
-        "region": "midwest",
-        "price": 330,
-        "note": "A 120 millas de Kansas City",
-    },
+    "maryville": {"display": "Maryville, MO", "state": "MO", "region": "midwest", "price": 330, "note": "A 120 millas de Kansas City"},
 
     # Tennessee (TN)
-    "knoxville": {
-        "display": "Knoxville, TN",
-        "state": "TN",
-        "region": "south",
-        "price": 375,
-        "note": "",
-    },
+    "knoxville": {"display": "Knoxville, TN", "state": "TN", "region": "south", "price": 375, "note": ""},
 
     # Colorado (CO)
-    "gypsum": {
-        "display": "Gypsum, CO",
-        "state": "CO",
-        "region": "west",
-        "price": 250,
-        "note": "",
-    },
+    "gypsum": {"display": "Gypsum, CO", "state": "CO", "region": "west", "price": 250, "note": ""},
 
     # Arkansas (AR)
-    "jonesboro": {
-        "display": "Jonesboro, AR",
-        "state": "AR",
-        "region": "south",
-        "price": 250,
-        "note": "",
-    },
+    "jonesboro": {"display": "Jonesboro, AR", "state": "AR", "region": "south", "price": 250, "note": ""},
 
     # Iowa (IA)
-    "des moines": {
-        "display": "Des Moines, IA",
-        "state": "IA",
-        "region": "midwest",
-        "price": 450,
-        "note": "",
-    },
+    noted_key_desmoines = "des moines"
+    "des moines": {"display": "Des Moines, IA", "state": "IA", "region": "midwest", "price": 450, "note": ""},
 
     # Kansas (KS)
-    "fort scott": {
-        "display": "Fort Scott, KS",
-        "state": "KS",
-        "region": "midwest",
-        "price": 500,
-        "note": "",
-    },
+    "fort scott": {"display": "Fort Scott, KS", "state": "KS", "region": "midwest", "price": 500, "note": ""},
 
     # Michigan (MI)
-    "grand rapids": {
-        "display": "Grand Rapids, MI",
-        "state": "MI",
-        "region": "midwest",
-        "price": 500,
-        "note": "",
-    },
-    "kalamazoo": {
-        "display": "Kalamazoo, MI",
-        "state": "MI",
-        "region": "midwest",
-        "price": 500,
-        "note": "",
-    },
+    "grand rapids": {"display": "Grand Rapids, MI", "state": "MI", "region": "midwest", "price": 500, "note": ""},
+    "kalamazoo": {"display": "Kalamazoo, MI", "state": "MI", "region": "midwest", "price": 500, "note": ""},
 
     # North Carolina (NC)
-    "greensboro": {
-        "display": "Greensboro, NC",
-        "state": "NC",
-        "region": "south",
-        "price": 650,
-        "note": "",
-    },
+    "greensboro": {"display": "Greensboro, NC", "state": "NC", "region": "south", "price": 650, "note": ""},
 
     # Alabama (AL)
-    "dothan": {
-        "display": "Dothan, AL",
-        "state": "AL",
-        "region": "south",
-        "price": 450,
-        "note": "",
-    },
+    "dothan": {"display": "Dothan, AL", "state": "AL", "region": "south", "price": 450, "note": ""},
 
     # Washington (WA)
-    "kitsap": {
-        "display": "Kitsap, WA",
-        "state": "WA",
-        "region": "west",
-        "price": 500,
-        "note": "A 40 millas de Seattle",
-    },
+    "kitsap": {"display": "Kitsap, WA", "state": "WA", "region": "west", "price": 500, "note": "A 40 millas de Seattle"},
 
     # Oregon (OR)
-    "portland": {
-        "display": "Portland, OR",
-        "state": "OR",
-        "region": "west",
-        "price": 700,
-        "note": "",
-    },
+    "portland": {"display": "Portland, OR", "state": "OR", "region": "west", "price": 700, "note": ""},
 
     # Maryland (MD)
-    "baltimore": {
-        "display": "Baltimore, MD",
-        "state": "MD",
-        "region": "south",
-        "price": 600,
-        "note": "",
-    },
+    "baltimore": {"display": "Baltimore, MD", "state": "MD", "region": "south", "price": 600, "note": ""},
 }
 
 # =========================
@@ -403,8 +280,6 @@ def extract_state_code(raw: str):
         "GEORGIA":"GA",
         "NEW YORK":"NY",
         "PENSILVANIA":"PA",
-
-        # extras (para sugerencias)
         "MARYLAND":"MD",
         "OREGON":"OR",
         "WASHINGTON":"WA",
@@ -429,14 +304,11 @@ def find_city_key(user_text: str):
     t = normalize(user_text)
     if t in AVAILABLE_CITIES:
         return t
-
-    # match seguro incluso con ciudades multi-palabra (ej: "des moines", "fort scott")
     t_pad = f" {t} "
     for key in AVAILABLE_CITIES.keys():
         key_pad = f" {key} "
         if key_pad in t_pad:
             return key
-
     return None
 
 def suggest_alternatives(user_text: str, limit: int = 3):
@@ -474,6 +346,10 @@ def calculate_final_price(base_price: int, account_type: str) -> int:
     return base_price
 
 def availability_message(city_raw: str, account_type: str) -> str:
+    """
+    ✅ Esto se mantiene para REACTIVACIÓN (y para cualquier otro flujo que sí necesite validar/escribir).
+    ❌ Cuenta nueva ya NO usa esta función.
+    """
     key = find_city_key(city_raw)
 
     if key and key in AVAILABLE_CITIES:
@@ -584,6 +460,18 @@ def advance_menu():
         ]
     ])
 
+# ✅ NUEVO: Menú de ciudades disponibles para Cuenta Nueva (botones)
+def amazon_new_cities_menu():
+    items = list(AVAILABLE_CITIES.items())
+    items.sort(key=lambda kv: kv[1].get("display", ""))
+
+    keyboard = []
+    for key, meta in items:
+        keyboard.append([InlineKeyboardButton(meta["display"], callback_data=f"amz:new:city:{key}")])
+
+    keyboard.append([InlineKeyboardButton("⬅️ Volver", callback_data="amz:back:type")])
+    return InlineKeyboardMarkup(keyboard)
+
 # =========================
 # HANDLERS
 # =========================
@@ -592,12 +480,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await track_user_and_notify_start(update, context)
 
-    # Log en Render
     logging.info("START | %s | chat_id=%s",
                  _user_label(update.effective_user),
                  update.effective_chat.id if update.effective_chat else "N/A")
 
-    # Notificación a tu Telegram
     await notify_admin(
         context,
         "🟢 /start\n"
@@ -615,7 +501,6 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = (q.data or "")
     logging.info("CALLBACK | %s | data=%s", _user_label(q.from_user), data)
 
-    # ✅ Notificar botones al admin
     await notify_admin(
         context,
         "🔘 BOTÓN (callback)\n"
@@ -685,15 +570,54 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         choice = data.split(":", 2)[2]
         context.user_data["service"] = "amazon_flex"
 
+        # ✅ Cuenta nueva: mostrar botones con todas las ciudades
         if choice == "nueva":
-            context.user_data["mode"] = "amazon_new_account_city"
-            await q.edit_message_text(AMAZON_NEW_ACCOUNT_TEXT)
+            context.user_data["mode"] = "amazon_new_pick_city"
+            await q.edit_message_text(AMAZON_NEW_ACCOUNT_TEXT, reply_markup=amazon_new_cities_menu())
             return
 
+        # Reactivación: se queda igual (escriben ciudad y se valida)
         if choice == "reactivacion":
             context.user_data["mode"] = "amazon_reactivation_requirements"
             await q.edit_message_text(AMAZON_REACT_REQUIREMENTS_TEXT)
             return
+
+    # ✅ Volver desde lista de ciudades a tipo
+    if data == "amz:back:type":
+        context.user_data["mode"] = "amazon_choose_type"
+        await q.edit_message_text(AMAZON_CHOOSE_TYPE, reply_markup=amazon_type_menu())
+        return
+
+    # ✅ Selección de ciudad (Cuenta Nueva)
+    if data.startswith("amz:new:city:"):
+        city_key = data.split(":", 3)[3]
+        meta = AVAILABLE_CITIES.get(city_key)
+
+        if not meta:
+            context.user_data["mode"] = "amazon_new_pick_city"
+            await q.edit_message_text(
+                "❌ Esta ciudad ya no está disponible. Seleccione otra:",
+                reply_markup=amazon_new_cities_menu()
+            )
+            return
+
+        context.user_data["service"] = "amazon_flex"
+        context.user_data["mode"] = "amazon_new_wait_continue"
+        context.user_data["last_city"] = meta["display"]
+
+        final_price = calculate_final_price(int(meta.get("price", 0)), account_type="new")
+        note = (meta.get("note") or "").strip()
+
+        msg = (
+            f"✅ Sí contamos con disponibilidad en {meta['display']}.\n"
+            f"💰 Precio: ${final_price}\n"
+        )
+        if note:
+            msg += f"📌 {note}\n"
+        msg += "\nPara continuar con el proceso, por favor escriba: CONTINUAR"
+
+        await q.edit_message_text(msg)
+        return
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
@@ -706,7 +630,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text_raw = update.message.text or ""
     text_norm = normalize(text_raw)
 
-    # ✅ Notificar texto al admin
     u = update.effective_user
     await notify_admin(
         context,
@@ -716,7 +639,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✍️ texto:\n{text_raw}"
     )
 
-    # Salida formal en cualquier momento
     if wants_to_exit(text_norm):
         context.user_data.clear()
         await update.message.reply_text(GOODBYE_TEXT)
@@ -726,22 +648,15 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mode = context.user_data.get("mode", "")
 
     # =========================
-    # AMAZON FLEX - CUENTA NUEVA
+    # AMAZON FLEX - CUENTA NUEVA (NO TEXTO)
     # =========================
-    if service == "amazon_flex" and mode == "amazon_new_account_city":
-        city_raw = text_raw.strip()
-        if not city_raw:
-            await update.message.reply_text("📍 Por favor, indíquenos la ciudad.")
-            return
-
-        reply = availability_message(city_raw, account_type="new")
-        await update.message.reply_text(reply)
-
-        if find_city_key(city_raw):
-            context.user_data["mode"] = "amazon_new_wait_continue"
-            context.user_data["last_city"] = city_raw
+    if service == "amazon_flex" and mode == "amazon_new_pick_city":
+        await update.message.reply_text("📌 Por favor seleccione una ciudad usando los botones.")
         return
 
+    # =========================
+    # AMAZON FLEX - CUENTA NUEVA (CONTINUAR -> REQUISITOS)
+    # =========================
     if service == "amazon_flex" and mode == "amazon_new_wait_continue":
         if "continuar" in text_norm:
             context.user_data["mode"] = "amazon_new_requirements"
@@ -797,7 +712,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Para continuar, por favor escriba: CONTINUAR")
         return
 
-    # Si el usuario escribe sin estar en flujo
     await update.message.reply_text(
         "Para comenzar, por favor escriba /start.",
         reply_markup=services_menu()
@@ -805,7 +719,6 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
     logging.exception("ERROR del bot: %s", context.error)
-    # Si hay admin, intentamos avisar (sin romper nada)
     try:
         await notify_admin(context, f"🚨 ERROR en el bot:\n{context.error}")
     except Exception:
@@ -815,7 +728,6 @@ def main():
     if not BOT_TOKEN:
         raise RuntimeError("Falta TELEGRAM_BOT_TOKEN o BOT_TOKEN en variables de entorno")
 
-    # Aviso si faltó admin id
     if not ADMIN_CHAT_ID:
         logging.warning("⚠️ Falta ADMIN_CHAT_ID (no se enviarán mensajes al admin).")
 
@@ -831,7 +743,6 @@ def main():
     app.add_error_handler(on_error)
 
     logging.info("✅ Bot listo. Iniciando polling...")
-    # Polling (Render: asegúrate que SOLO haya 1 instancia corriendo)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
