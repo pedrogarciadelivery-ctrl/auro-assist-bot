@@ -27,10 +27,7 @@ from telegram.ext import (
 # =========================
 # LOGGING
 # =========================
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logging.info("🤖 Bot iniciado (cargando código)")
 
 # =========================
@@ -38,12 +35,9 @@ logging.info("🤖 Bot iniciado (cargando código)")
 # =========================
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
 
-# ✅ Tu Telegram ID para recibir todo (poner en Render -> Environment)
-# KEY: ADMIN_CHAT_ID
-# VALUE: 7639001737
+# KEY: ADMIN_CHAT_ID  VALUE: 7639001737
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
 
-# Tu WhatsApp (formato USA)
 WHATSAPP_NUMBER = "+1 512 679 0599"
 
 # =========================
@@ -63,7 +57,7 @@ AMAZON_CHOOSE_TYPE = (
     "Por favor, seleccione una opción:"
 )
 
-# ✅ NUEVO: Encabezado + NO pedir escribir ciudad
+# ✅ Encabezado como pediste + botones debajo
 AMAZON_NEW_ACCOUNT_TEXT = (
     "Veo que ha seleccionado Cuenta Nueva ✅\n\n"
     "Aquí tiene todas las ciudades que tenemos disponibles.\n\n"
@@ -102,7 +96,7 @@ OWNER_CONTACT_TEXT = (
     "Si cumple con todos los requisitos y desea continuar con la aplicación, "
     "por favor comuníquese conmigo directamente por WhatsApp:\n\n"
     f"📞 WhatsApp: {WHATSAPP_NUMBER}\n\n"
-    "Escriba por favor: \"Hola, vengo del bot y cumplo con los requisitos\"."
+    'Escriba por favor: "Hola, vengo del bot y cumplo con los requisitos".'
 )
 
 WHATSAPP_STATUS_TEXT = (
@@ -154,71 +148,36 @@ INSTACART_OWNER_CONTACT_TEXT = (
     "Perfecto ✅\n\n"
     "Para avanzar con el proceso, por favor comuníquese conmigo directamente por WhatsApp:\n\n"
     f"📞 WhatsApp: {WHATSAPP_NUMBER}\n\n"
-    "Escriba por favor:\n"
     "\"Hola, vengo del bot, elegí Instacart y quiero avanzar\".\n\n"
     "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp."
 )
 
 # =========================
-# DISPONIBILIDAD REAL (EDITA AQUÍ SI CAMBIA)
-# Precios base YA incluyen +150 (según tu lista final)
-# Reactivación suma +500 adicional (ver calculate_final_price)
+# DISPONIBILIDAD REAL
+# Precios base YA incluyen +150
+# Reactivación suma +500 adicional (calculate_final_price)
 # =========================
 AVAILABLE_CITIES = {
-    # Pennsylvania (PA)
     "bellefonte": {"display": "Bellefonte, PA", "state": "PA", "region": "northeast", "price": 270, "note": "Cerca de NY y Philadelphia"},
     "pittsburgh": {"display": "Pittsburgh, PA", "state": "PA", "region": "northeast", "price": 350, "note": ""},
-
-    # Minnesota (MN)
     "mankato": {"display": "Mankato, MN", "state": "MN", "region": "midwest", "price": 250, "note": "A 80 millas de Minneapolis"},
     "minneapolis": {"display": "Minneapolis, MN", "state": "MN", "region": "midwest", "price": 400, "note": ""},
-
-    # West Virginia (WV)
     "davisville": {"display": "Davisville, WV", "state": "WV", "region": "south", "price": 300, "note": "A 3 horas de Cincinnati"},
     "beaver": {"display": "Beaver, WV", "state": "WV", "region": "south", "price": 280, "note": "A 3 horas de Charlotte"},
-
-    # Georgia (GA)
     "brunswick": {"display": "Brunswick, GA", "state": "GA", "region": "south", "price": 300, "note": "A 1 hora de Jacksonville"},
-
-    # New York (NY)
     "buffalo": {"display": "Buffalo, NY", "state": "NY", "region": "northeast", "price": 500, "note": ""},
-
-    # Missouri (MO)
     "maryville": {"display": "Maryville, MO", "state": "MO", "region": "midwest", "price": 330, "note": "A 120 millas de Kansas City"},
-
-    # Tennessee (TN)
     "knoxville": {"display": "Knoxville, TN", "state": "TN", "region": "south", "price": 375, "note": ""},
-
-    # Colorado (CO)
     "gypsum": {"display": "Gypsum, CO", "state": "CO", "region": "west", "price": 250, "note": ""},
-
-    # Arkansas (AR)
     "jonesboro": {"display": "Jonesboro, AR", "state": "AR", "region": "south", "price": 250, "note": ""},
-
-    # Iowa (IA)
-    noted_key_desmoines = "des moines"
     "des moines": {"display": "Des Moines, IA", "state": "IA", "region": "midwest", "price": 450, "note": ""},
-
-    # Kansas (KS)
     "fort scott": {"display": "Fort Scott, KS", "state": "KS", "region": "midwest", "price": 500, "note": ""},
-
-    # Michigan (MI)
     "grand rapids": {"display": "Grand Rapids, MI", "state": "MI", "region": "midwest", "price": 500, "note": ""},
     "kalamazoo": {"display": "Kalamazoo, MI", "state": "MI", "region": "midwest", "price": 500, "note": ""},
-
-    # North Carolina (NC)
     "greensboro": {"display": "Greensboro, NC", "state": "NC", "region": "south", "price": 650, "note": ""},
-
-    # Alabama (AL)
     "dothan": {"display": "Dothan, AL", "state": "AL", "region": "south", "price": 450, "note": ""},
-
-    # Washington (WA)
     "kitsap": {"display": "Kitsap, WA", "state": "WA", "region": "west", "price": 500, "note": "A 40 millas de Seattle"},
-
-    # Oregon (OR)
     "portland": {"display": "Portland, OR", "state": "OR", "region": "west", "price": 700, "note": ""},
-
-    # Maryland (MD)
     "baltimore": {"display": "Baltimore, MD", "state": "MD", "region": "south", "price": 600, "note": ""},
 }
 
@@ -245,12 +204,8 @@ def normalize(text: str) -> str:
     return t
 
 EXIT_KEYWORDS = {
-    "salir", "cancelar",
-    "no cumplo", "nocumplo",
-    "no me sirve", "no sirve",
-    "ninguna", "ninguna opcion", "ninguna opción",
-    "no quiero", "ya no", "no gracias",
-    "gracias",
+    "salir","cancelar","no cumplo","nocumplo","no me sirve","no sirve",
+    "ninguna","ninguna opcion","ninguna opción","no quiero","ya no","no gracias","gracias",
 }
 
 def wants_to_exit(text_norm: str) -> bool:
@@ -273,26 +228,7 @@ def extract_state_code(raw: str):
     m = re.search(r"\b([A-Z]{2})\b", text)
     if m and m.group(1) in US_REGIONS_BY_STATE:
         return m.group(1)
-    names = {
-        "PENNSYLVANIA":"PA",
-        "MINNESOTA":"MN",
-        "WEST VIRGINIA":"WV",
-        "GEORGIA":"GA",
-        "NEW YORK":"NY",
-        "PENSILVANIA":"PA",
-        "MARYLAND":"MD",
-        "OREGON":"OR",
-        "WASHINGTON":"WA",
-        "TENNESSEE":"TN",
-        "COLORADO":"CO",
-        "IOWA":"IA",
-        "KANSAS":"KS",
-        "MICHIGAN":"MI",
-        "NORTH CAROLINA":"NC",
-        "ALABAMA":"AL",
-        "ARKANSAS":"AR",
-        "MISSOURI":"MO",
-    }
+    names = {"PENNSYLVANIA":"PA","MINNESOTA":"MN","WEST VIRGINIA":"WV","GEORGIA":"GA","NEW YORK":"NY","PENSILVANIA":"PA"}
     up = re.sub(r"[^A-Z\s]", " ", text)
     up = re.sub(r"\s+", " ", up).strip()
     for k, v in names.items():
@@ -306,8 +242,7 @@ def find_city_key(user_text: str):
         return t
     t_pad = f" {t} "
     for key in AVAILABLE_CITIES.keys():
-        key_pad = f" {key} "
-        if key_pad in t_pad:
+        if f" {key} " in t_pad:
             return key
     return None
 
@@ -319,19 +254,18 @@ def suggest_alternatives(user_text: str, limit: int = 3):
         same_state = [meta["display"] for _, meta in items if meta.get("state") == state]
         if same_state:
             return same_state[:limit]
-
         region = US_REGIONS_BY_STATE.get(state)
         if region:
             same_region = [meta["display"] for _, meta in items if meta.get("region") == region]
             if same_region:
                 return same_region[:limit]
 
+    # fallback por regiones
     ordered = []
-    for pref in ["northeast", "south", "midwest", "west"]:
+    for pref in ["northeast","south","midwest","west"]:
         ordered.extend([meta["display"] for _, meta in items if meta.get("region") == pref])
 
-    seen = set()
-    out = []
+    out, seen = [], set()
     for c in ordered:
         if c not in seen:
             seen.add(c)
@@ -339,17 +273,11 @@ def suggest_alternatives(user_text: str, limit: int = 3):
     return out[:limit]
 
 def calculate_final_price(base_price: int, account_type: str) -> int:
-    # ⚠️ base_price YA incluye +150 (lista final)
-    # Reactivación sigue sumando +500 adicional
     if account_type == "reactivation":
         return base_price + 500
     return base_price
 
 def availability_message(city_raw: str, account_type: str) -> str:
-    """
-    ✅ Esto se mantiene para REACTIVACIÓN (y para cualquier otro flujo que sí necesite validar/escribir).
-    ❌ Cuenta nueva ya NO usa esta función.
-    """
     key = find_city_key(city_raw)
 
     if key and key in AVAILABLE_CITIES:
@@ -364,10 +292,10 @@ def availability_message(city_raw: str, account_type: str) -> str:
         )
         if note:
             msg += f"📌 {note}\n"
-
         msg += "\nPara continuar con el proceso, por favor escriba: CONTINUAR"
         return msg
 
+    # ⚠️ Esto SOLO lo usaremos en REACTIVACIÓN (en cuenta nueva ya NO se llama)
     suggestions = suggest_alternatives(city_raw, limit=3)
     sug_txt = "\n".join([f"• {s}" for s in suggestions]) if suggestions else "• (Sin sugerencias disponibles por el momento)"
 
@@ -382,7 +310,7 @@ def availability_message(city_raw: str, account_type: str) -> str:
 # =========================
 # ADMIN / MONITOREO
 # =========================
-_seen_users = {}  # user_id -> last_seen_iso
+_seen_users = {}
 
 def _user_label(u) -> str:
     if not u:
@@ -395,7 +323,6 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 async def notify_admin(context: ContextTypes.DEFAULT_TYPE, text: str):
-    """Envía a tu chat (ADMIN_CHAT_ID) un mensaje con logs del bot."""
     if not ADMIN_CHAT_ID:
         return
     try:
@@ -413,12 +340,11 @@ async def cmd_admin_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await notify_admin(context, "✅ Admin test: el bot puede enviarte mensajes.")
 
 async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Lista rápida de últimos usuarios vistos (memoria temporal; se reinicia si Render reinicia)."""
     if not _seen_users:
         await update.message.reply_text("Aún no hay usuarios registrados en memoria.")
         return
     items = sorted(_seen_users.items(), key=lambda x: x[1], reverse=True)[:20]
-    lines = [f"👥 Últimos usuarios (máx 20):"]
+    lines = ["👥 Últimos usuarios (máx 20):"]
     for user_id, ts in items:
         lines.append(f"• user_id={user_id} | last_seen={ts}")
     await update.message.reply_text("\n".join(lines))
@@ -446,21 +372,17 @@ def amazon_type_menu():
 
 def yes_no_menu():
     return InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("✅ SI", callback_data="instacart:yes"),
-            InlineKeyboardButton("❌ NO", callback_data="instacart:no"),
-        ]
+        [InlineKeyboardButton("✅ SI", callback_data="instacart:yes"),
+         InlineKeyboardButton("❌ NO", callback_data="instacart:no")]
     ])
 
 def advance_menu():
     return InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("➡️ AVANZAR", callback_data="instacart:advance"),
-            InlineKeyboardButton("❌ NO", callback_data="instacart:cancel"),
-        ]
+        [InlineKeyboardButton("➡️ AVANZAR", callback_data="instacart:advance"),
+         InlineKeyboardButton("❌ NO", callback_data="instacart:cancel")]
     ])
 
-# ✅ NUEVO: Menú de ciudades disponibles para Cuenta Nueva (botones)
+# ✅ Botones de ciudades para Cuenta Nueva
 def amazon_new_cities_menu():
     items = list(AVAILABLE_CITIES.items())
     items.sort(key=lambda kv: kv[1].get("display", ""))
@@ -477,7 +399,6 @@ def amazon_new_cities_menu():
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-
     await track_user_and_notify_start(update, context)
 
     logging.info("START | %s | chat_id=%s",
@@ -538,9 +459,7 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # =========================
-    # INSTACART - BOTONES
-    # =========================
+    # INSTACART
     if data == "instacart:yes":
         context.user_data["service"] = "instacart"
         context.user_data["mode"] = "instacart_decide_advance"
@@ -563,42 +482,35 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(GOODBYE_TEXT)
         return
 
-    # =========================
     # AMAZON - TIPO
-    # =========================
     if data.startswith("amz:type:"):
         choice = data.split(":", 2)[2]
         context.user_data["service"] = "amazon_flex"
 
-        # ✅ Cuenta nueva: mostrar botones con todas las ciudades
         if choice == "nueva":
             context.user_data["mode"] = "amazon_new_pick_city"
             await q.edit_message_text(AMAZON_NEW_ACCOUNT_TEXT, reply_markup=amazon_new_cities_menu())
             return
 
-        # Reactivación: se queda igual (escriben ciudad y se valida)
         if choice == "reactivacion":
             context.user_data["mode"] = "amazon_reactivation_requirements"
             await q.edit_message_text(AMAZON_REACT_REQUIREMENTS_TEXT)
             return
 
-    # ✅ Volver desde lista de ciudades a tipo
+    # AMAZON - volver a tipo
     if data == "amz:back:type":
         context.user_data["mode"] = "amazon_choose_type"
         await q.edit_message_text(AMAZON_CHOOSE_TYPE, reply_markup=amazon_type_menu())
         return
 
-    # ✅ Selección de ciudad (Cuenta Nueva)
+    # AMAZON - Cuenta nueva: ciudad seleccionada
     if data.startswith("amz:new:city:"):
         city_key = data.split(":", 3)[3]
         meta = AVAILABLE_CITIES.get(city_key)
 
         if not meta:
             context.user_data["mode"] = "amazon_new_pick_city"
-            await q.edit_message_text(
-                "❌ Esta ciudad ya no está disponible. Seleccione otra:",
-                reply_markup=amazon_new_cities_menu()
-            )
+            await q.edit_message_text("❌ Esta ciudad ya no está disponible. Seleccione otra:", reply_markup=amazon_new_cities_menu())
             return
 
         context.user_data["service"] = "amazon_flex"
@@ -647,16 +559,12 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     service = context.user_data.get("service", "")
     mode = context.user_data.get("mode", "")
 
-    # =========================
-    # AMAZON FLEX - CUENTA NUEVA (NO TEXTO)
-    # =========================
+    # ✅ Cuenta nueva: NO aceptar texto, solo botones
     if service == "amazon_flex" and mode == "amazon_new_pick_city":
         await update.message.reply_text("📌 Por favor seleccione una ciudad usando los botones.")
         return
 
-    # =========================
-    # AMAZON FLEX - CUENTA NUEVA (CONTINUAR -> REQUISITOS)
-    # =========================
+    # Cuenta nueva: continuar -> requisitos
     if service == "amazon_flex" and mode == "amazon_new_wait_continue":
         if "continuar" in text_norm:
             context.user_data["mode"] = "amazon_new_requirements"
@@ -673,20 +581,16 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Si cumple con todos los requisitos, por favor escriba: CUMPLO")
         return
 
-    # =========================
-    # AMAZON FLEX - REACTIVACIÓN
-    # =========================
+    # REACTIVACIÓN (queda igual)
     if service == "amazon_flex" and mode == "amazon_reactivation_requirements":
         if "cumplo" in text_norm:
             context.user_data["mode"] = "amazon_reactivation_city"
             await update.message.reply_text("Perfecto. Ahora indíqueme en qué ciudad desea la nueva cuenta.")
             return
-
         if "no cumplo" in text_norm or "nocumplo" in text_norm:
             context.user_data.clear()
             await update.message.reply_text(GOODBYE_TEXT)
             return
-
         await update.message.reply_text("Por favor responda escribiendo: CUMPLO o NO CUMPLO")
         return
 
@@ -696,6 +600,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("📍 Por favor, indíqueme la ciudad.")
             return
 
+        # aquí sí puede salir NO disponible / sugerencias (solo reactivación)
         reply = availability_message(city_raw, account_type="reactivation")
         await update.message.reply_text(reply)
 
@@ -712,10 +617,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Para continuar, por favor escriba: CONTINUAR")
         return
 
-    await update.message.reply_text(
-        "Para comenzar, por favor escriba /start.",
-        reply_markup=services_menu()
-    )
+    await update.message.reply_text("Para comenzar, por favor escriba /start.", reply_markup=services_menu())
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
     logging.exception("ERROR del bot: %s", context.error)
