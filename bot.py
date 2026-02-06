@@ -278,7 +278,7 @@ AVAILABLE_CITIES = {
     "cody": {"display": "Cody, WY", "state": "WY", "region": "west", "price": 290, "note": ""},
     "riverton": {"display": "Riverton, WY", "state": "WY", "region": "west", "price": 370, "note": ""},
 }
-}
+
 
 # =========================
 # HELPERS
