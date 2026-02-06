@@ -158,27 +158,126 @@ INSTACART_OWNER_CONTACT_TEXT = (
 # Reactivación suma +500 adicional (calculate_final_price)
 # =========================
 AVAILABLE_CITIES = {
-    "bellefonte": {"display": "Bellefonte, PA", "state": "PA", "region": "northeast", "price": 270, "note": "Cerca de NY y Philadelphia"},
-    "pittsburgh": {"display": "Pittsburgh, PA", "state": "PA", "region": "northeast", "price": 350, "note": ""},
-    "mankato": {"display": "Mankato, MN", "state": "MN", "region": "midwest", "price": 250, "note": "A 80 millas de Minneapolis"},
-    "minneapolis": {"display": "Minneapolis, MN", "state": "MN", "region": "midwest", "price": 400, "note": ""},
-    "davisville": {"display": "Davisville, WV", "state": "WV", "region": "south", "price": 300, "note": "A 3 horas de Cincinnati"},
-    "beaver": {"display": "Beaver, WV", "state": "WV", "region": "south", "price": 280, "note": "A 3 horas de Charlotte"},
-    "brunswick": {"display": "Brunswick, GA", "state": "GA", "region": "south", "price": 300, "note": "A 1 hora de Jacksonville"},
-    "buffalo": {"display": "Buffalo, NY", "state": "NY", "region": "northeast", "price": 500, "note": ""},
-    "maryville": {"display": "Maryville, MO", "state": "MO", "region": "midwest", "price": 330, "note": "A 120 millas de Kansas City"},
-    "knoxville": {"display": "Knoxville, TN", "state": "TN", "region": "south", "price": 375, "note": ""},
-    "gypsum": {"display": "Gypsum, CO", "state": "CO", "region": "west", "price": 250, "note": ""},
-    "jonesboro": {"display": "Jonesboro, AR", "state": "AR", "region": "south", "price": 250, "note": ""},
-    "des moines": {"display": "Des Moines, IA", "state": "IA", "region": "midwest", "price": 450, "note": ""},
-    "fort scott": {"display": "Fort Scott, KS", "state": "KS", "region": "midwest", "price": 500, "note": ""},
-    "grand rapids": {"display": "Grand Rapids, MI", "state": "MI", "region": "midwest", "price": 500, "note": ""},
-    "kalamazoo": {"display": "Kalamazoo, MI", "state": "MI", "region": "midwest", "price": 500, "note": ""},
-    "greensboro": {"display": "Greensboro, NC", "state": "NC", "region": "south", "price": 650, "note": ""},
-    "dothan": {"display": "Dothan, AL", "state": "AL", "region": "south", "price": 450, "note": ""},
-    "kitsap": {"display": "Kitsap, WA", "state": "WA", "region": "west", "price": 500, "note": "A 40 millas de Seattle"},
-    "portland": {"display": "Portland, OR", "state": "OR", "region": "west", "price": 700, "note": ""},
-    "baltimore": {"display": "Baltimore, MD", "state": "MD", "region": "south", "price": 600, "note": ""},
+    # ARIZONA
+    "prescott": {"display": "Prescott, AZ", "state": "AZ", "region": "west", "price": 300, "note": ""},
+    "show low": {"display": "Show Low, AZ", "state": "AZ", "region": "west", "price": 290, "note": ""},
+
+    # ARKANSAS
+    "fayetteville springdale": {"display": "Fayetteville–Springdale, AR", "state": "AR", "region": "south", "price": 220, "note": ""},
+    "yellville": {"display": "Yellville, AR", "state": "AR", "region": "south", "price": 140, "note": ""},
+    "jonesboro": {"display": "Jonesboro, AR", "state": "AR", "region": "south", "price": 140, "note": ""},
+
+    # COLORADO
+    "montrose": {"display": "Montrose, CO", "state": "CO", "region": "west", "price": 240, "note": ""},
+
+    # FLORIDA
+    "tallahassee": {"display": "Tallahassee, FL", "state": "FL", "region": "south", "price": 250, "note": ""},
+
+    # GEORGIA
+    "brunswick": {"display": "Brunswick, GA", "state": "GA", "region": "south", "price": 140, "note": ""},
+    "valdosta": {"display": "Valdosta, GA", "state": "GA", "region": "south", "price": 240, "note": ""},
+    "savannah": {"display": "Savannah, GA", "state": "GA", "region": "south", "price": 490, "note": ""},
+    "columbus": {"display": "Columbus, GA", "state": "GA", "region": "south", "price": 300, "note": ""},
+
+    # IDAHO
+    "sandpoint": {"display": "Sandpoint, ID", "state": "ID", "region": "west", "price": 240, "note": ""},
+    "boise": {"display": "Boise, ID", "state": "ID", "region": "west", "price": 540, "note": ""},
+    "idaho falls": {"display": "Idaho Falls, ID", "state": "ID", "region": "west", "price": 290, "note": ""},
+    "jerome": {"display": "Jerome, ID", "state": "ID", "region": "west", "price": 190, "note": ""},
+
+    # INDIANA
+    "evansville": {"display": "Evansville, IN", "state": "IN", "region": "midwest", "price": 180, "note": ""},
+    "lafayette": {"display": "Lafayette, IN", "state": "IN", "region": "midwest", "price": 340, "note": ""},
+
+    # IOWA
+    "eagle grove": {"display": "Eagle Grove, IA", "state": "IA", "region": "midwest", "price": 190, "note": ""},
+    "dubuque": {"display": "Dubuque, IA", "state": "IA", "region": "midwest", "price": 290, "note": ""},
+
+    # KANSAS
+    "fort scott": {"display": "Fort Scott, KS", "state": "KS", "region": "midwest", "price": 290, "note": ""},
+    "wichita": {"display": "Wichita, KS", "state": "KS", "region": "midwest", "price": 290, "note": ""},
+
+    # KENTUCKY
+    "paducah": {"display": "Paducah, KY", "state": "KY", "region": "south", "price": 190, "note": ""},
+
+    # MAINE
+    "caribou": {"display": "Caribou, ME", "state": "ME", "region": "northeast", "price": 160, "note": ""},
+
+    # MINNESOTA
+    "fergus falls alexandria": {"display": "Fergus Falls–Alexandria, MN", "state": "MN", "region": "midwest", "price": 140, "note": ""},
+    "mankato": {"display": "Mankato, MN", "state": "MN", "region": "midwest", "price": 160, "note": ""},
+    "st cloud": {"display": "St. Cloud, MN", "state": "MN", "region": "midwest", "price": 190, "note": ""},
+    "grand rapids": {"display": "Grand Rapids, MN", "state": "MN", "region": "midwest", "price": 220, "note": ""},
+
+    # MISSOURI
+    "springfield": {"display": "Springfield, MO", "state": "MO", "region": "midwest", "price": 240, "note": ""},
+
+    # MONTANA
+    "butte": {"display": "Butte, MT", "state": "MT", "region": "west", "price": 140, "note": ""},
+    "belgrade": {"display": "Belgrade, MT", "state": "MT", "region": "west", "price": 220, "note": ""},
+
+    # NEVADA
+    "wells": {"display": "Wells, NV", "state": "NV", "region": "west", "price": 140, "note": ""},
+
+    # NEW MEXICO
+    "roswell": {"display": "Roswell, NM", "state": "NM", "region": "west", "price": 220, "note": ""},
+    "hobbs": {"display": "Hobbs, NM", "state": "NM", "region": "west", "price": 190, "note": ""},
+
+    # NEW YORK
+    "glens falls granville": {"display": "Glens Falls–Granville, NY", "state": "NY", "region": "northeast", "price": 160, "note": ""},
+    "buffalo": {"display": "Buffalo, NY", "state": "NY", "region": "northeast", "price": 290, "note": ""},
+
+    # NORTH CAROLINA
+    "southern pines": {"display": "Southern Pines, NC", "state": "NC", "region": "south", "price": 190, "note": ""},
+
+    # NORTH DAKOTA
+    "minot stanley": {"display": "Minot–Stanley, ND", "state": "ND", "region": "midwest", "price": 220, "note": ""},
+
+    # OHIO
+    "hillsboro": {"display": "Hillsboro, OH", "state": "OH", "region": "midwest", "price": 190, "note": ""},
+    "akron": {"display": "Akron, OH", "state": "OH", "region": "midwest", "price": 390, "note": ""},
+    "lima findlay": {"display": "Lima–Findlay, OH", "state": "OH", "region": "midwest", "price": 340, "note": ""},
+
+    # OREGON
+    "la grande": {"display": "La Grande, OR", "state": "OR", "region": "west", "price": 260, "note": ""},
+
+    # PENNSYLVANIA
+    "erie": {"display": "Erie, PA", "state": "PA", "region": "northeast", "price": 190, "note": ""},
+    "bellefonte": {"display": "Bellefonte, PA", "state": "PA", "region": "northeast", "price": 190, "note": ""},
+    "lancaster": {"display": "Lancaster, PA", "state": "PA", "region": "northeast", "price": 390, "note": ""},
+    "pittsburgh": {"display": "Pittsburgh, PA", "state": "PA", "region": "northeast", "price": 290, "note": ""},
+    "allentown": {"display": "Allentown, PA", "state": "PA", "region": "northeast", "price": 390, "note": ""},
+
+    # SOUTH DAKOTA
+    "sioux falls": {"display": "Sioux Falls, SD", "state": "SD", "region": "midwest", "price": 140, "note": ""},
+
+    # TEXAS
+    "brownsville": {"display": "Brownsville, TX", "state": "TX", "region": "south", "price": 140, "note": ""},
+    "nacogdoches": {"display": "Nacogdoches, TX", "state": "TX", "region": "south", "price": 190, "note": ""},
+    "bryan": {"display": "Bryan, TX", "state": "TX", "region": "south", "price": 340, "note": ""},
+
+    # VIRGINIA
+    "roanoke": {"display": "Roanoke, VA", "state": "VA", "region": "south", "price": 390, "note": ""},
+
+    # WASHINGTON
+    "pasco": {"display": "Pasco, WA", "state": "WA", "region": "west", "price": 190, "note": ""},
+    "kennewick richland": {"display": "Kennewick–Richland, WA", "state": "WA", "region": "west", "price": 220, "note": ""},
+    "union gap yakima": {"display": "Union Gap–Yakima, WA", "state": "WA", "region": "west", "price": 240, "note": ""},
+    "pullman": {"display": "Pullman, WA", "state": "WA", "region": "west", "price": 240, "note": ""},
+    "wenatchee": {"display": "Wenatchee, WA", "state": "WA", "region": "west", "price": 150, "note": ""},
+    "kitsap": {"display": "Kitsap, WA", "state": "WA", "region": "west", "price": 390, "note": ""},
+
+    # WEST VIRGINIA
+    "beaver": {"display": "Beaver, WV", "state": "WV", "region": "south", "price": 190, "note": ""},
+    "davisville": {"display": "Davisville, WV", "state": "WV", "region": "south", "price": 240, "note": ""},
+
+    # WISCONSIN
+    "wausau weston": {"display": "Wausau–Weston, WI", "state": "WI", "region": "midwest", "price": 140, "note": ""},
+
+    # WYOMING
+    "cody": {"display": "Cody, WY", "state": "WY", "region": "west", "price": 140, "note": ""},
+    "riverton": {"display": "Riverton, WY", "state": "WY", "region": "west", "price": 220, "note": ""},
+}
 }
 
 # =========================
