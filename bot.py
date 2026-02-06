@@ -279,7 +279,6 @@ AVAILABLE_CITIES = {
     "riverton": {"display": "Riverton, WY", "state": "WY", "region": "west", "price": 370, "note": ""},
 }
 }
-}
 
 # =========================
 # HELPERS
