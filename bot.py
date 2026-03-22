@@ -1,19 +1,24 @@
 # bot.py
 # Telegram Bot (Python) - Auro Ashly Flex Master
-# Flujo principal: Servicios -> Amazon Flex -> (Cuenta nueva / Reactivación)
-# Sin IA. Sin inventar disponibilidad. Con cierre formal y sugerencia de Estados de WhatsApp.
-#
-# ✅ ADMIN MODE:
-# - Envía a tu Telegram (ADMIN_CHAT_ID) todo lo que escriben los clientes + botones
-# - Te dice quién lo escribió (nombre, @username, user_id, chat_id)
-# - También notifica cuando dan /start
+# Mejorado para:
+# - recibir texto
+# - recibir audios / notas de voz
+# - transcribir audios con OpenAI
+# - procesar la transcripción igual que si fuera texto
+# - guardar leads en archivo JSONL
+# - seguir notificando al admin
 
 import os
 import re
+import json
 import time
+import asyncio
 import logging
+import tempfile
+from pathlib import Path
 from datetime import datetime, timezone
 
+from openai import OpenAI
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -34,11 +39,14 @@ logging.info("🤖 Bot iniciado (cargando código)")
 # CONFIG
 # =========================
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
-
-# KEY: ADMIN_CHAT_ID  VALUE: 7639001737
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
+WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "+1 512 679 0599")
 
-WHATSAPP_NUMBER = "+1 512 679 0599"
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+AUDIO_TRANSCRIBE_MODEL = os.environ.get("AUDIO_TRANSCRIBE_MODEL", "gpt-4o-transcribe")
+LEADS_FILE = os.environ.get("LEADS_FILE", "leads.jsonl")
+
+openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 # =========================
 # TEXTOS
@@ -57,7 +65,6 @@ AMAZON_CHOOSE_TYPE = (
     "Por favor, seleccione una opción:"
 )
 
-# ✅ Encabezado como pediste + botones debajo
 AMAZON_NEW_ACCOUNT_TEXT = (
     "Veo que ha seleccionado Cuenta Nueva ✅\n\n"
     "Aquí tiene todas las ciudades que tenemos disponibles.\n\n"
@@ -152,138 +159,90 @@ INSTACART_OWNER_CONTACT_TEXT = (
     "📌 Le recomendamos revisar con frecuencia nuestros Estados de WhatsApp."
 )
 
+AUDIO_RECEIVED_TEXT = "🎤 Recibí su audio. Un momento mientras lo proceso..."
+AUDIO_ERROR_TEXT = (
+    "⚠️ En este momento no pude procesar el audio.\n\n"
+    "Por favor, intente de nuevo o envíe su mensaje en texto."
+)
+
+AUDIO_NOT_CONFIGURED_TEXT = (
+    "⚠️ El sistema de audio todavía no está configurado.\n\n"
+    "Por favor, envíe su mensaje en texto por ahora."
+)
+
 # =========================
 # DISPONIBILIDAD REAL
-# Precios base YA incluyen +150
-# Reactivación suma +500 adicional (calculate_final_price)
 # =========================
 AVAILABLE_CITIES = {
-    # ARIZONA
     "prescott": {"display": "Prescott, AZ", "state": "AZ", "region": "west", "price": 450, "note": ""},
     "show low": {"display": "Show Low, AZ", "state": "AZ", "region": "west", "price": 440, "note": ""},
-
-    # ARKANSAS
     "fayetteville springdale": {"display": "Fayetteville–Springdale, AR", "state": "AR", "region": "south", "price": 370, "note": ""},
     "yellville": {"display": "Yellville, AR", "state": "AR", "region": "south", "price": 290, "note": ""},
     "jonesboro": {"display": "Jonesboro, AR", "state": "AR", "region": "south", "price": 290, "note": ""},
-
-    # COLORADO
     "montrose": {"display": "Montrose, CO", "state": "CO", "region": "west", "price": 390, "note": ""},
-
-    # FLORIDA
     "tallahassee": {"display": "Tallahassee, FL", "state": "FL", "region": "south", "price": 400, "note": ""},
-
-    # GEORGIA
     "brunswick": {"display": "Brunswick, GA", "state": "GA", "region": "south", "price": 290, "note": ""},
     "valdosta": {"display": "Valdosta, GA", "state": "GA", "region": "south", "price": 390, "note": ""},
     "savannah": {"display": "Savannah, GA", "state": "GA", "region": "south", "price": 640, "note": ""},
     "columbus": {"display": "Columbus, GA", "state": "GA", "region": "south", "price": 450, "note": ""},
-
-    # IDAHO
     "sandpoint": {"display": "Sandpoint, ID", "state": "ID", "region": "west", "price": 390, "note": ""},
     "boise": {"display": "Boise, ID", "state": "ID", "region": "west", "price": 690, "note": ""},
     "idaho falls": {"display": "Idaho Falls, ID", "state": "ID", "region": "west", "price": 440, "note": ""},
     "jerome": {"display": "Jerome, ID", "state": "ID", "region": "west", "price": 340, "note": ""},
-
-    # INDIANA
     "evansville": {"display": "Evansville, IN", "state": "IN", "region": "midwest", "price": 330, "note": ""},
     "lafayette": {"display": "Lafayette, IN", "state": "IN", "region": "midwest", "price": 490, "note": ""},
-
-    # IOWA
     "eagle grove": {"display": "Eagle Grove, IA", "state": "IA", "region": "midwest", "price": 340, "note": ""},
     "dubuque": {"display": "Dubuque, IA", "state": "IA", "region": "midwest", "price": 440, "note": ""},
-
-    # KANSAS
     "fort scott": {"display": "Fort Scott, KS", "state": "KS", "region": "midwest", "price": 440, "note": ""},
     "wichita": {"display": "Wichita, KS", "state": "KS", "region": "midwest", "price": 440, "note": ""},
-
-    # KENTUCKY
     "paducah": {"display": "Paducah, KY", "state": "KY", "region": "south", "price": 340, "note": ""},
-
-    # MAINE
     "caribou": {"display": "Caribou, ME", "state": "ME", "region": "northeast", "price": 310, "note": ""},
-
-    # MINNESOTA
     "fergus falls alexandria": {"display": "Fergus Falls–Alexandria, MN", "state": "MN", "region": "midwest", "price": 290, "note": ""},
     "mankato": {"display": "Mankato, MN", "state": "MN", "region": "midwest", "price": 310, "note": ""},
     "st cloud": {"display": "St. Cloud, MN", "state": "MN", "region": "midwest", "price": 340, "note": ""},
     "grand rapids": {"display": "Grand Rapids, MN", "state": "MN", "region": "midwest", "price": 370, "note": ""},
-
-    # MISSOURI
     "springfield": {"display": "Springfield, MO", "state": "MO", "region": "midwest", "price": 390, "note": ""},
-
-    # MONTANA
     "butte": {"display": "Butte, MT", "state": "MT", "region": "west", "price": 290, "note": ""},
     "belgrade": {"display": "Belgrade, MT", "state": "MT", "region": "west", "price": 370, "note": ""},
-
-    # NEVADA
     "wells": {"display": "Wells, NV", "state": "NV", "region": "west", "price": 290, "note": ""},
-
-    # NEW MEXICO
     "roswell": {"display": "Roswell, NM", "state": "NM", "region": "west", "price": 370, "note": ""},
     "hobbs": {"display": "Hobbs, NM", "state": "NM", "region": "west", "price": 340, "note": ""},
-
-    # NEW YORK
     "glens falls granville": {"display": "Glens Falls–Granville, NY", "state": "NY", "region": "northeast", "price": 310, "note": ""},
     "buffalo": {"display": "Buffalo, NY", "state": "NY", "region": "northeast", "price": 440, "note": ""},
-
-    # NORTH CAROLINA
     "southern pines": {"display": "Southern Pines, NC", "state": "NC", "region": "south", "price": 340, "note": ""},
-
-    # NORTH DAKOTA
     "minot stanley": {"display": "Minot–Stanley, ND", "state": "ND", "region": "midwest", "price": 370, "note": ""},
-
-    # OHIO
     "hillsboro": {"display": "Hillsboro, OH", "state": "OH", "region": "midwest", "price": 340, "note": ""},
     "akron": {"display": "Akron, OH", "state": "OH", "region": "midwest", "price": 540, "note": ""},
     "lima findlay": {"display": "Lima–Findlay, OH", "state": "OH", "region": "midwest", "price": 490, "note": ""},
-
-    # OREGON
     "la grande": {"display": "La Grande, OR", "state": "OR", "region": "west", "price": 410, "note": ""},
-
-    # PENNSYLVANIA
     "erie": {"display": "Erie, PA", "state": "PA", "region": "northeast", "price": 340, "note": ""},
     "bellefonte": {"display": "Bellefonte, PA", "state": "PA", "region": "northeast", "price": 340, "note": ""},
     "lancaster": {"display": "Lancaster, PA", "state": "PA", "region": "northeast", "price": 540, "note": ""},
     "pittsburgh": {"display": "Pittsburgh, PA", "state": "PA", "region": "northeast", "price": 440, "note": ""},
     "allentown": {"display": "Allentown, PA", "state": "PA", "region": "northeast", "price": 540, "note": ""},
-
-    # SOUTH DAKOTA
     "sioux falls": {"display": "Sioux Falls, SD", "state": "SD", "region": "midwest", "price": 290, "note": ""},
-
-    # TEXAS
     "brownsville": {"display": "Brownsville, TX", "state": "TX", "region": "south", "price": 290, "note": ""},
     "nacogdoches": {"display": "Nacogdoches, TX", "state": "TX", "region": "south", "price": 340, "note": ""},
     "bryan": {"display": "Bryan, TX", "state": "TX", "region": "south", "price": 490, "note": ""},
-
-    # VIRGINIA
     "roanoke": {"display": "Roanoke, VA", "state": "VA", "region": "south", "price": 540, "note": ""},
-
-    # WASHINGTON
     "pasco": {"display": "Pasco, WA", "state": "WA", "region": "west", "price": 340, "note": ""},
     "kennewick richland": {"display": "Kennewick–Richland, WA", "state": "WA", "region": "west", "price": 370, "note": ""},
     "union gap yakima": {"display": "Union Gap–Yakima, WA", "state": "WA", "region": "west", "price": 390, "note": ""},
     "pullman": {"display": "Pullman, WA", "state": "WA", "region": "west", "price": 390, "note": ""},
     "wenatchee": {"display": "Wenatchee, WA", "state": "WA", "region": "west", "price": 300, "note": ""},
     "kitsap": {"display": "Kitsap, WA", "state": "WA", "region": "west", "price": 540, "note": ""},
-
-    # WEST VIRGINIA
     "beaver": {"display": "Beaver, WV", "state": "WV", "region": "south", "price": 340, "note": ""},
     "davisville": {"display": "Davisville, WV", "state": "WV", "region": "south", "price": 390, "note": ""},
-
-    # WISCONSIN
     "wausau weston": {"display": "Wausau–Weston, WI", "state": "WI", "region": "midwest", "price": 290, "note": ""},
-
-    # WYOMING
     "cody": {"display": "Cody, WY", "state": "WY", "region": "west", "price": 290, "note": ""},
     "riverton": {"display": "Riverton, WY", "state": "WY", "region": "west", "price": 370, "note": ""},
 }
-
 
 # =========================
 # HELPERS
 # =========================
 _recent = {}
+_seen_users = {}
 
 def is_duplicate(chat_id: int, message_id: int, ttl: int = 30) -> bool:
     now = time.time()
@@ -303,8 +262,8 @@ def normalize(text: str) -> str:
     return t
 
 EXIT_KEYWORDS = {
-    "salir","cancelar","no cumplo","nocumplo","no me sirve","no sirve",
-    "ninguna","ninguna opcion","ninguna opción","no quiero","ya no","no gracias","gracias",
+    "salir", "cancelar", "no cumplo", "nocumplo", "no me sirve", "no sirve",
+    "ninguna", "ninguna opcion", "ninguna opción", "no quiero", "ya no", "no gracias", "gracias",
 }
 
 def wants_to_exit(text_norm: str) -> bool:
@@ -327,7 +286,14 @@ def extract_state_code(raw: str):
     m = re.search(r"\b([A-Z]{2})\b", text)
     if m and m.group(1) in US_REGIONS_BY_STATE:
         return m.group(1)
-    names = {"PENNSYLVANIA":"PA","MINNESOTA":"MN","WEST VIRGINIA":"WV","GEORGIA":"GA","NEW YORK":"NY","PENSILVANIA":"PA"}
+    names = {
+        "PENNSYLVANIA":"PA",
+        "MINNESOTA":"MN",
+        "WEST VIRGINIA":"WV",
+        "GEORGIA":"GA",
+        "NEW YORK":"NY",
+        "PENSILVANIA":"PA"
+    }
     up = re.sub(r"[^A-Z\s]", " ", text)
     up = re.sub(r"\s+", " ", up).strip()
     for k, v in names.items():
@@ -359,9 +325,8 @@ def suggest_alternatives(user_text: str, limit: int = 3):
             if same_region:
                 return same_region[:limit]
 
-    # fallback por regiones
     ordered = []
-    for pref in ["northeast","south","midwest","west"]:
+    for pref in ["northeast", "south", "midwest", "west"]:
         ordered.extend([meta["display"] for _, meta in items if meta.get("region") == pref])
 
     out, seen = [], set()
@@ -394,7 +359,6 @@ def availability_message(city_raw: str, account_type: str) -> str:
         msg += "\nPara continuar con el proceso, por favor escriba: CONTINUAR"
         return msg
 
-    # ⚠️ Esto SOLO lo usaremos en REACTIVACIÓN (en cuenta nueva ya NO se llama)
     suggestions = suggest_alternatives(city_raw, limit=3)
     sug_txt = "\n".join([f"• {s}" for s in suggestions]) if suggestions else "• (Sin sugerencias disponibles por el momento)"
 
@@ -406,11 +370,6 @@ def availability_message(city_raw: str, account_type: str) -> str:
         f"{WHATSAPP_STATUS_TEXT}"
     )
 
-# =========================
-# ADMIN / MONITOREO
-# =========================
-_seen_users = {}
-
 def _user_label(u) -> str:
     if not u:
         return "N/A"
@@ -420,6 +379,25 @@ def _user_label(u) -> str:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+def save_lead(update: Update, text: str, source: str):
+    try:
+        payload = {
+            "timestamp": _now_iso(),
+            "source": source,
+            "text": text,
+            "chat_id": update.effective_chat.id if update.effective_chat else None,
+            "user_id": update.effective_user.id if update.effective_user else None,
+            "username": update.effective_user.username if update.effective_user else None,
+            "full_name": update.effective_user.full_name if update.effective_user else None,
+            "service": update._effective_user and None,  # placeholder seguro
+        }
+
+        Path(LEADS_FILE).parent.mkdir(parents=True, exist_ok=True)
+        with open(LEADS_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception as e:
+        logging.warning("No pude guardar lead: %s", e)
 
 async def notify_admin(context: ContextTypes.DEFAULT_TYPE, text: str):
     if not ADMIN_CHAT_ID:
@@ -447,6 +425,35 @@ async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for user_id, ts in items:
         lines.append(f"• user_id={user_id} | last_seen={ts}")
     await update.message.reply_text("\n".join(lines))
+
+# =========================
+# AUDIO
+# =========================
+def _transcribe_file_sync(file_path: str) -> str:
+    if not openai_client:
+        raise RuntimeError("OPENAI_API_KEY no configurada")
+
+    with open(file_path, "rb") as audio_file:
+        transcript = openai_client.audio.transcriptions.create(
+            model=AUDIO_TRANSCRIBE_MODEL,
+            file=audio_file,
+        )
+    text = getattr(transcript, "text", "") or ""
+    return text.strip()
+
+async def transcribe_telegram_audio(telegram_file, suffix: str = ".ogg") -> str:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp_path = tmp.name
+
+    try:
+        await telegram_file.download_to_drive(custom_path=tmp_path)
+        text = await asyncio.to_thread(_transcribe_file_sync, tmp_path)
+        return text
+    finally:
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
 
 # =========================
 # MENÚS
@@ -481,7 +488,6 @@ def advance_menu():
          InlineKeyboardButton("❌ NO", callback_data="instacart:cancel")]
     ])
 
-# ✅ Botones de ciudades para Cuenta Nueva
 def amazon_new_cities_menu():
     items = list(AVAILABLE_CITIES.items())
     items.sort(key=lambda kv: kv[1].get("display", ""))
@@ -494,15 +500,107 @@ def amazon_new_cities_menu():
     return InlineKeyboardMarkup(keyboard)
 
 # =========================
+# LÓGICA CENTRAL DE TEXTO
+# =========================
+async def process_text_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    text_raw: str,
+    source: str = "text",
+):
+    if not text_raw:
+        await update.message.reply_text("No pude entender su mensaje. Intente nuevamente.")
+        return
+
+    text_norm = normalize(text_raw)
+    save_lead(update, text_raw, source)
+
+    u = update.effective_user
+    await notify_admin(
+        context,
+        "📩 MENSAJE\n"
+        f"👤 {_user_label(u)}\n"
+        f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}\n"
+        f"🧾 origen={source}\n"
+        f"✍️ texto:\n{text_raw}"
+    )
+
+    if wants_to_exit(text_norm):
+        context.user_data.clear()
+        await update.message.reply_text(GOODBYE_TEXT)
+        return
+
+    service = context.user_data.get("service", "")
+    mode = context.user_data.get("mode", "")
+
+    if service == "amazon_flex" and mode == "amazon_new_pick_city":
+        await update.message.reply_text("📌 Por favor seleccione una ciudad usando los botones.")
+        return
+
+    if service == "amazon_flex" and mode == "amazon_new_wait_continue":
+        if "continuar" in text_norm:
+            context.user_data["mode"] = "amazon_new_requirements"
+            await update.message.reply_text(AMAZON_REQUIREMENTS_TEXT)
+            return
+        await update.message.reply_text("Para continuar, por favor escriba: CONTINUAR")
+        return
+
+    if service == "amazon_flex" and mode == "amazon_new_requirements":
+        if "cumplo" in text_norm:
+            context.user_data["mode"] = "amazon_done"
+            await update.message.reply_text(OWNER_CONTACT_TEXT)
+            return
+        await update.message.reply_text("Si cumple con todos los requisitos, por favor escriba: CUMPLO")
+        return
+
+    if service == "amazon_flex" and mode == "amazon_reactivation_requirements":
+        if "cumplo" in text_norm:
+            context.user_data["mode"] = "amazon_reactivation_city"
+            await update.message.reply_text("Perfecto. Ahora indíqueme en qué ciudad desea la nueva cuenta.")
+            return
+        if "no cumplo" in text_norm or "nocumplo" in text_norm:
+            context.user_data.clear()
+            await update.message.reply_text(GOODBYE_TEXT)
+            return
+        await update.message.reply_text("Por favor responda escribiendo: CUMPLO o NO CUMPLO")
+        return
+
+    if service == "amazon_flex" and mode == "amazon_reactivation_city":
+        city_raw = text_raw.strip()
+        if not city_raw:
+            await update.message.reply_text("📍 Por favor, indíqueme la ciudad.")
+            return
+
+        reply = availability_message(city_raw, account_type="reactivation")
+        await update.message.reply_text(reply)
+
+        if find_city_key(city_raw):
+            context.user_data["mode"] = "amazon_reactivation_wait_continue"
+            context.user_data["last_city"] = city_raw
+        return
+
+    if service == "amazon_flex" and mode == "amazon_reactivation_wait_continue":
+        if "continuar" in text_norm:
+            context.user_data["mode"] = "amazon_done"
+            await update.message.reply_text(OWNER_CONTACT_TEXT)
+            return
+        await update.message.reply_text("Para continuar, por favor escriba: CONTINUAR")
+        return
+
+    await update.message.reply_text("Para comenzar, por favor escriba /start.", reply_markup=services_menu())
+
+# =========================
 # HANDLERS
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
     await track_user_and_notify_start(update, context)
 
-    logging.info("START | %s | chat_id=%s",
-                 _user_label(update.effective_user),
-                 update.effective_chat.id if update.effective_chat else "N/A")
+    logging.info(
+        "START | %s | chat_id=%s",
+        _user_label(update.effective_user),
+        update.effective_chat.id if update.effective_chat else "N/A"
+    )
 
     await notify_admin(
         context,
@@ -554,11 +652,12 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await q.edit_message_text(
             COMING_SOON_TEXT,
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]])
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬅️ Volver a servicios", callback_data="nav:services")]]
+            )
         )
         return
 
-    # INSTACART
     if data == "instacart:yes":
         context.user_data["service"] = "instacart"
         context.user_data["mode"] = "instacart_decide_advance"
@@ -581,7 +680,6 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text(GOODBYE_TEXT)
         return
 
-    # AMAZON - TIPO
     if data.startswith("amz:type:"):
         choice = data.split(":", 2)[2]
         context.user_data["service"] = "amazon_flex"
@@ -596,20 +694,21 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await q.edit_message_text(AMAZON_REACT_REQUIREMENTS_TEXT)
             return
 
-    # AMAZON - volver a tipo
     if data == "amz:back:type":
         context.user_data["mode"] = "amazon_choose_type"
         await q.edit_message_text(AMAZON_CHOOSE_TYPE, reply_markup=amazon_type_menu())
         return
 
-    # AMAZON - Cuenta nueva: ciudad seleccionada
     if data.startswith("amz:new:city:"):
         city_key = data.split(":", 3)[3]
         meta = AVAILABLE_CITIES.get(city_key)
 
         if not meta:
             context.user_data["mode"] = "amazon_new_pick_city"
-            await q.edit_message_text("❌ Esta ciudad ya no está disponible. Seleccione otra:", reply_markup=amazon_new_cities_menu())
+            await q.edit_message_text(
+                "❌ Esta ciudad ya no está disponible. Seleccione otra:",
+                reply_markup=amazon_new_cities_menu()
+            )
             return
 
         context.user_data["service"] = "amazon_flex"
@@ -637,86 +736,83 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     await track_user_and_notify_start(update, context)
+    await process_text_message(update, context, update.message.text or "", source="text")
 
-    text_raw = update.message.text or ""
-    text_norm = normalize(text_raw)
+async def on_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.voice:
+        return
+    if is_duplicate(update.message.chat_id, update.message.message_id):
+        return
 
-    u = update.effective_user
+    await track_user_and_notify_start(update, context)
+
     await notify_admin(
         context,
-        "📩 MENSAJE\n"
-        f"👤 {_user_label(u)}\n"
+        "🎤 AUDIO RECIBIDO\n"
+        f"👤 {_user_label(update.effective_user)}\n"
         f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}\n"
-        f"✍️ texto:\n{text_raw}"
+        f"⏱ duración={update.message.voice.duration}s"
     )
 
-    if wants_to_exit(text_norm):
-        context.user_data.clear()
-        await update.message.reply_text(GOODBYE_TEXT)
+    if not openai_client:
+        await update.message.reply_text(AUDIO_NOT_CONFIGURED_TEXT)
         return
 
-    service = context.user_data.get("service", "")
-    mode = context.user_data.get("mode", "")
+    waiting_msg = await update.message.reply_text(AUDIO_RECEIVED_TEXT)
 
-    # ✅ Cuenta nueva: NO aceptar texto, solo botones
-    if service == "amazon_flex" and mode == "amazon_new_pick_city":
-        await update.message.reply_text("📌 Por favor seleccione una ciudad usando los botones.")
-        return
+    try:
+        telegram_file = await update.message.voice.get_file()
+        transcript = await transcribe_telegram_audio(telegram_file, suffix=".ogg")
 
-    # Cuenta nueva: continuar -> requisitos
-    if service == "amazon_flex" and mode == "amazon_new_wait_continue":
-        if "continuar" in text_norm:
-            context.user_data["mode"] = "amazon_new_requirements"
-            await update.message.reply_text(AMAZON_REQUIREMENTS_TEXT)
-            return
-        await update.message.reply_text("Para continuar, por favor escriba: CONTINUAR")
-        return
-
-    if service == "amazon_flex" and mode == "amazon_new_requirements":
-        if "cumplo" in text_norm:
-            context.user_data["mode"] = "amazon_done"
-            await update.message.reply_text(OWNER_CONTACT_TEXT)
-            return
-        await update.message.reply_text("Si cumple con todos los requisitos, por favor escriba: CUMPLO")
-        return
-
-    # REACTIVACIÓN (queda igual)
-    if service == "amazon_flex" and mode == "amazon_reactivation_requirements":
-        if "cumplo" in text_norm:
-            context.user_data["mode"] = "amazon_reactivation_city"
-            await update.message.reply_text("Perfecto. Ahora indíqueme en qué ciudad desea la nueva cuenta.")
-            return
-        if "no cumplo" in text_norm or "nocumplo" in text_norm:
-            context.user_data.clear()
-            await update.message.reply_text(GOODBYE_TEXT)
-            return
-        await update.message.reply_text("Por favor responda escribiendo: CUMPLO o NO CUMPLO")
-        return
-
-    if service == "amazon_flex" and mode == "amazon_reactivation_city":
-        city_raw = text_raw.strip()
-        if not city_raw:
-            await update.message.reply_text("📍 Por favor, indíqueme la ciudad.")
+        if not transcript:
+            await waiting_msg.edit_text(AUDIO_ERROR_TEXT)
             return
 
-        # aquí sí puede salir NO disponible / sugerencias (solo reactivación)
-        reply = availability_message(city_raw, account_type="reactivation")
-        await update.message.reply_text(reply)
+        await waiting_msg.edit_text(f"📝 Transcripción:\n{transcript}")
+        await process_text_message(update, context, transcript, source="voice")
 
-        if find_city_key(city_raw):
-            context.user_data["mode"] = "amazon_reactivation_wait_continue"
-            context.user_data["last_city"] = city_raw
+    except Exception as e:
+        logging.exception("Error procesando nota de voz: %s", e)
+        await waiting_msg.edit_text(AUDIO_ERROR_TEXT)
+        await notify_admin(context, f"🚨 ERROR procesando nota de voz:\n{e}")
+
+async def on_audio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.audio:
+        return
+    if is_duplicate(update.message.chat_id, update.message.message_id):
         return
 
-    if service == "amazon_flex" and mode == "amazon_reactivation_wait_continue":
-        if "continuar" in text_norm:
-            context.user_data["mode"] = "amazon_done"
-            await update.message.reply_text(OWNER_CONTACT_TEXT)
+    await track_user_and_notify_start(update, context)
+
+    await notify_admin(
+        context,
+        "🎵 AUDIO RECIBIDO\n"
+        f"👤 {_user_label(update.effective_user)}\n"
+        f"💬 chat_id={update.effective_chat.id if update.effective_chat else 'N/A'}\n"
+        f"🎼 archivo={update.message.audio.file_name or 'sin nombre'}"
+    )
+
+    if not openai_client:
+        await update.message.reply_text(AUDIO_NOT_CONFIGURED_TEXT)
+        return
+
+    waiting_msg = await update.message.reply_text(AUDIO_RECEIVED_TEXT)
+
+    try:
+        telegram_file = await update.message.audio.get_file()
+        transcript = await transcribe_telegram_audio(telegram_file, suffix=".mp3")
+
+        if not transcript:
+            await waiting_msg.edit_text(AUDIO_ERROR_TEXT)
             return
-        await update.message.reply_text("Para continuar, por favor escriba: CONTINUAR")
-        return
 
-    await update.message.reply_text("Para comenzar, por favor escriba /start.", reply_markup=services_menu())
+        await waiting_msg.edit_text(f"📝 Transcripción:\n{transcript}")
+        await process_text_message(update, context, transcript, source="audio")
+
+    except Exception as e:
+        logging.exception("Error procesando audio: %s", e)
+        await waiting_msg.edit_text(AUDIO_ERROR_TEXT)
+        await notify_admin(context, f"🚨 ERROR procesando audio:\n{e}")
 
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE):
     logging.exception("ERROR del bot: %s", context.error)
@@ -732,6 +828,9 @@ def main():
     if not ADMIN_CHAT_ID:
         logging.warning("⚠️ Falta ADMIN_CHAT_ID (no se enviarán mensajes al admin).")
 
+    if not OPENAI_API_KEY:
+        logging.warning("⚠️ Falta OPENAI_API_KEY (los audios no funcionarán).")
+
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -739,6 +838,8 @@ def main():
     app.add_handler(CommandHandler("who", cmd_who))
 
     app.add_handler(CallbackQueryHandler(on_callback))
+    app.add_handler(MessageHandler(filters.VOICE, on_voice))
+    app.add_handler(MessageHandler(filters.AUDIO, on_audio))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     app.add_error_handler(on_error)
